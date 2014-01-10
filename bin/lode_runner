@@ -24,7 +24,7 @@ class LodeRunner(TextTestRunner):
         return LodeTestResult(
             self.stream,
             self.descriptions,
-            self.verbosity,
+            0,
             self.config
         )
 
