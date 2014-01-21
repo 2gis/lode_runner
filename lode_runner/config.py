@@ -14,3 +14,21 @@ def load_json(json_file, encoding):
         config = json.load(handle)
 
     return config
+
+
+def load_ini(ini_file, encoding):
+    """ Parse and collapse a ConfigParser-Style ini file into a nested,
+    eval'ing the individual values, as they are assumed to be valid
+    python statement formatted """
+
+    tmpconfig = ConfigParser.ConfigParser()
+    with codecs.open(ini_file, 'r', encoding) as f:
+        tmpconfig.readfp(f)
+
+    config = {}
+    for section in tmpconfig.sections():
+        config[section] = {}
+        for option in tmpconfig.options(section):
+            config[section][option] = tmpconfig.get(section, option)
+
+    return config
