@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from lode_runner.config import load_json, load_ini, load_yaml
+from lode_runner.config import load_json, load_ini
 
 
 class ConfigTest(unittest.TestCase):
