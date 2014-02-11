@@ -21,7 +21,6 @@ class TestActionTest(unittest.TestCase):
         self.assertEquals("...ok", parts.pop(0))
 
     def test_failing_test_action(self):
-        asdf
         msg = u"test_action_message"
         output = cStringIO.StringIO()
         test_action = TestAction(msg, output)
