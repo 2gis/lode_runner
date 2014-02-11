@@ -32,7 +32,6 @@ class LodeRunner(TextTestRunner):
 
 class LodeProgram(TestProgram):
     def runTests(self):
-        print self.config
         self.testRunner = LodeRunner(
             stream=self.config.stream,
             verbosity=self.config.verbosity,
