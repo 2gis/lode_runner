@@ -1,0 +1,4 @@
+language: python
+python:
+  - "2.7"
+script: "PYTHONPATH=`pwd` bin/lode_runner tests/"
