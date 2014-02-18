@@ -35,7 +35,3 @@ class TestActionTest(unittest.TestCase):
         self.assertEquals("[%s]" % time, parts.pop(0))
         self.assertEquals(msg, parts.pop(0))
         self.assertEquals("...fail", parts.pop(0))
-
-    def test_some(self):
-        with TestAction(u'asdf'):
-            pass
