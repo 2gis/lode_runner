@@ -1,5 +1,6 @@
 import logging
 import os
+import inspect
 
 from nose.plugins import Plugin
 log = logging.getLogger('nose.plugins.dataprovider')
@@ -28,7 +29,7 @@ class Dataprovider(Plugin):
             if hasattr(testMethod, '_data_provided'):
                 data = testMethod._data_provided
 
-                _data = prepare_data(data)
+                _data = prepare_data(data, test)
 
                 dataprovided_tests = []
                 for data_set in _data:
@@ -57,9 +58,12 @@ def make_func(func, name, data_set):
     return standalone_func
 
 
-def prepare_data(data):
+def prepare_data(data, test):
     if callable(data):
-        _data = data()
+        if len(inspect.getargspec(data).args):
+            _data = data(test)
+        else:
+            _data = data()
     elif isinstance(data, staticmethod):
         _data = data.__func__()
     else:
