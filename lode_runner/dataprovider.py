@@ -32,7 +32,7 @@ class Dataprovider(Plugin):
 
                 dataprovided_tests = []
                 for data_set in _data:
-                    name = testMethod.__name__ + "_" + str(data_set)
+                    name = testMethod.__name__ + "_" + unicode(data_set).encode("utf-8")
                     new_test_func = make_func(testMethod, name, data_set)
                     setattr(parent, new_test_func.__name__, new_test_func)
                     new_test = parent(new_test_func.__name__)
