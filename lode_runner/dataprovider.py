@@ -25,7 +25,7 @@ class Dataprovider(Plugin):
 
         _tests = []
         for test in tests:
-            testMethod = getattr(test, test._testMethodName)
+            testMethod = getattr(test, test._testMethodName).__func__
             if hasattr(testMethod, '_data_provided'):
                 data = testMethod._data_provided
 
@@ -53,7 +53,7 @@ def make_func(func, name, data_set):
     if not isinstance(data_set, tuple):
         data_set = (data_set, )
 
-    standalone_func = lambda *a: func(*(data_set))
+    standalone_func = lambda *args: func(*(args + data_set))
     standalone_func.__name__ = name
     return standalone_func
 
