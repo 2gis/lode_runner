@@ -25,7 +25,12 @@ def function_provider():
 
 
 class DataproviderTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.set_up_class_called = True
+
     def setUp(self):
+        self.set_up_called = True
         self.value = 1
 
     @dataprovider([
@@ -37,6 +42,7 @@ class DataproviderTest(unittest.TestCase):
     def method_provider(self):
         self.setUp()
         value = self.value
+        self.tearDown()
         return [(x + value) for x in (0, 1, 2)]
 
     @dataprovider(
@@ -57,3 +63,10 @@ class DataproviderTest(unittest.TestCase):
     ])
     def test_unicode_string_dataprovider(self, data):
         tests_to_run.remove("%s_%s" % ("test_unicode_string_dataprovider", data))
+
+    @dataprovider([
+        1
+    ])
+    def test_setup_runs(self, data):
+        self.assertTrue(self.set_up_called)
+        self.assertTrue(self.set_up_class_called)
