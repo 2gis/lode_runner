@@ -34,16 +34,17 @@ class DataproviderTest(unittest.TestCase):
 
     def setUp(self):
         self.set_up_called = True
-        self.value = 1
 
     @dataprovider([1, 2, 3])
     def test_data_dataprovider(self, data):
         tests_to_run.remove("%s_%s" % ("test_data_dataprovider", data))
 
+    @property
+    def value(self):
+        return 1
+
     def method_provider(self):
-        self.setUp()
         value = self.value
-        self.tearDown()
         return [(x + value) for x in (0, 1, 2)]
 
     @dataprovider(method_provider)
@@ -68,3 +69,8 @@ class DataproviderTest(unittest.TestCase):
 class ClassDataproviderTest(unittest.TestCase):
     def test_class_dataprovider(self, data):
         tests_to_run.remove("%s_%s" % ("test_class_dataprovider", data))
+
+
+class TestAllTestsRan(unittest.TestCase):
+    def test_all_tests_ran(self):
+        self.assertEqual([], tests_to_run)

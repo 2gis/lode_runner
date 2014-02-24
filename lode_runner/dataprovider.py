@@ -22,31 +22,43 @@ class Dataprovider(Plugin):
         tests = []
         if isinstance(obj, list):
             tests = map(parent, obj)
+        elif inspect.ismethod(obj):
+            test = parent(obj.__name__)
+            testMethod = _get_test_method(test)
+            data = testMethod._data_provided
+            _data = _prepare_data(data, test)
+            return _make_dataprovided_tests(testMethod, parent, _data)
 
         _tests = []
         for test in tests:
-            testMethod = getattr(test, test._testMethodName).__func__
+            testMethod = _get_test_method(test)
             if hasattr(testMethod, '_data_provided'):
                 data = testMethod._data_provided
-
                 _data = _prepare_data(data, test)
-
-                dataprovided_tests = []
-                for data_set in _data:
-                    name = testMethod.__name__ + "_" + unicode(data_set).encode("utf-8")
-                    new_test_func = _make_func(testMethod, name, data_set)
-                    setattr(parent, new_test_func.__name__, new_test_func)
-                    new_test = parent(new_test_func.__name__)
-                    dataprovided_tests.append(new_test)
-
+                dataprovided_tests = _make_dataprovided_tests(testMethod, parent, _data)
                 _tests += dataprovided_tests
             else:
                 _tests += [test]
 
         tests = _tests
-
         if len(tests) > 0:
             return tests
+
+
+def _make_dataprovided_tests(testMethod, parent, data):
+    dataprovided_tests = []
+    for data_set in data:
+        name = testMethod.__name__ + "_" + unicode(data_set).encode("utf-8")
+        new_test_func = _make_func(testMethod, name, data_set)
+        setattr(parent, new_test_func.__name__, new_test_func)
+        new_test = parent(new_test_func.__name__)
+        dataprovided_tests.append(new_test)
+
+    return dataprovided_tests
+
+
+def _get_test_method(test):
+    return getattr(test, test._testMethodName).__func__
 
 
 def _make_func(func, name, data_set):
@@ -75,11 +87,11 @@ def _prepare_data(data, test):
 
 
 def dataprovider(data):
-    def decorator(func):
+    def wrapper(func):
         if inspect.isclass(func):
             for method_name, method in inspect.getmembers(func, predicate=inspect.ismethod):
                 method.__func__._data_provided = data
         else:
             func._data_provided = data
         return func
-    return decorator
+    return wrapper
