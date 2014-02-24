@@ -29,12 +29,12 @@ class Dataprovider(Plugin):
             if hasattr(testMethod, '_data_provided'):
                 data = testMethod._data_provided
 
-                _data = prepare_data(data, test)
+                _data = _prepare_data(data, test)
 
                 dataprovided_tests = []
                 for data_set in _data:
                     name = testMethod.__name__ + "_" + unicode(data_set).encode("utf-8")
-                    new_test_func = make_func(testMethod, name, data_set)
+                    new_test_func = _make_func(testMethod, name, data_set)
                     setattr(parent, new_test_func.__name__, new_test_func)
                     new_test = parent(new_test_func.__name__)
                     dataprovided_tests.append(new_test)
@@ -49,7 +49,7 @@ class Dataprovider(Plugin):
             return tests
 
 
-def make_func(func, name, data_set):
+def _make_func(func, name, data_set):
     if not isinstance(data_set, tuple):
         data_set = (data_set, )
 
@@ -58,7 +58,7 @@ def make_func(func, name, data_set):
     return standalone_func
 
 
-def prepare_data(data, test):
+def _prepare_data(data, test):
     if callable(data):
         if len(inspect.getargspec(data).args):
             _data = data(test)
@@ -76,6 +76,10 @@ def prepare_data(data, test):
 
 def dataprovider(data):
     def decorator(func):
-        func._data_provided = data
+        if inspect.isclass(func):
+            for method_name, method in inspect.getmembers(func, predicate=inspect.ismethod):
+                method.__func__._data_provided = data
+        else:
+            func._data_provided = data
         return func
     return decorator
