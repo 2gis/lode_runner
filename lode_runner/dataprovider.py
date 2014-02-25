@@ -45,10 +45,17 @@ class Dataprovider(Plugin):
             return tests
 
 
+def _data_set_safe_name(data_set):
+    try:
+        return str(data_set)
+    except UnicodeEncodeError:
+        return unicode(data_set).encode(encoding='utf-8')
+
+
 def _make_dataprovided_tests(testMethod, parent, data):
     dataprovided_tests = []
     for data_set in data:
-        name = testMethod.__name__ + "_" + unicode(data_set).encode("utf-8")
+        name = testMethod.__name__ + "_" + _data_set_safe_name(data_set)
         new_test_func = _make_func(testMethod, name, data_set)
         setattr(parent, new_test_func.__name__, new_test_func)
         new_test = parent(new_test_func.__name__)
