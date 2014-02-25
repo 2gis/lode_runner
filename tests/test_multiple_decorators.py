@@ -12,17 +12,12 @@ tests_to_run = set([
 
 class MultipleDecoratorsTest(unittest.TestCase):
 
-    @dataprovider([
-        1, 2
-    ])
+    @dataprovider([1, 2])
     @attr(speed='slow')
     def test_multiple_decorators_slow(self, number):
         tests_to_run.remove("%s_%s" % ("test_multiple_decorators_slow", number))
 
-
     @attr(speed='fast')
-    @dataprovider([
-        1, 2
-    ])
+    @dataprovider([1, 2])
     def test_multiple_decorators_fast(self, number):
         tests_to_run.remove("%s_%s" % ("test_multiple_decorators_fast", number))
