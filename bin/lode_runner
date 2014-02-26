@@ -53,18 +53,20 @@ class TestLoader(TestLoader):
 
 
 class LodeTestResult(TextTestResult):
-    def printErrorList(self, flavour, errors):
-        unicode_escaped_errors = []
-        for test, _err in errors:
-            try:
-                error_str = str(_err)
-            except UnicodeEncodeError:
-                error = unicode(_err)
-            else:
-                # 'ignore': ignore malformed data and continue decoding without further notice
-                error = error_str.decode(encoding='unicode-escape', errors='ignore')
-            unicode_escaped_errors.append((test, error))
-        super(LodeTestResult, self).printErrorList(flavour, unicode_escaped_errors)
+    pass
+    # TODO: fix printErrorList for different encoding
+    # def printErrorList(self, flavour, errors):
+    #     unicode_escaped_errors = []
+    #     for test, _err in errors:
+    #         try:
+    #             error_str = str(_err)
+    #         except UnicodeEncodeError:
+    #             error = unicode(_err)
+    #         else:
+    #             # 'ignore': ignore malformed data and continue decoding without further notice
+    #             error = error_str.decode(encoding='unicode-escape', errors='ignore')
+    #         unicode_escaped_errors.append((test, error))
+    #     super(LodeTestResult, self).printErrorList(flavour, unicode_escaped_errors)
 
 
 class LodeRunner(TextTestRunner):
