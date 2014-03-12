@@ -1,6 +1,8 @@
 import logging
 import os
 import inspect
+import copy
+
 
 from nose.plugins import Plugin
 log = logging.getLogger('nose.plugins.dataprovider')
@@ -27,12 +29,17 @@ class Dataprovider(Plugin):
 
         _tests = []
         for test in tests:
-            _tests += _make_dataprovided_tests(test, parent)
+            _tests += _make_dataprovided_tests(test)
 
         tests = _tests
         _tests = []
-        for test in tests:
-            _tests += _make_property_provided_tests(test, parent)
+        while(tests):
+            test = tests.pop(0)
+            _test = _make_property_provided_tests(test)
+            if _test == [test]:
+                _tests += _test
+            else:
+                tests += _test
 
         tests = _tests
         if len(tests) > 0:
@@ -46,7 +53,8 @@ def _data_set_safe_name(data_set):
         return unicode(data_set).encode(encoding='utf-8')
 
 
-def _make_dataprovided_tests(test, parent):
+def _make_dataprovided_tests(test):
+    parent = test.__class__
     testMethod = _get_test_method(test)
     if hasattr(testMethod, '_data_provided'):
         data = testMethod._data_provided
@@ -66,11 +74,11 @@ def _make_dataprovided_tests(test, parent):
         return [test]
 
 
-def _make_property_provided_tests(test, parent):
+def _make_property_provided_tests(test):
+    parent = test.__class__
     testMethod = _get_test_method(test)
     if hasattr(testMethod, '_property_provided'):
-        property_name, data = testMethod._property_provided
-        del testMethod._property_provided
+        property_name, data = testMethod._property_provided.pop(0)
         _data = _prepare_data(data, test)
 
         property_provided_tests = []
@@ -79,6 +87,8 @@ def _make_property_provided_tests(test, parent):
             setattr(new_parent, property_name, data_set)
             name = testMethod.__name__ + "_" + _data_set_safe_name(data_set)
             new_test_func = _make_func(testMethod, name)
+            if new_test_func._property_provided == []:
+                del new_test_func._property_provided
             setattr(new_parent, new_test_func.__name__, new_test_func)
             new_test = new_parent(new_test_func.__name__)
             property_provided_tests.append(new_test)
@@ -105,7 +115,7 @@ def _make_func(func, name, data_set=None):
         standalone_func = lambda *args: func(*(args + data_set))
     else:
         standalone_func = lambda *args: func(*args)
-    standalone_func.__dict__.update(func.__dict__)
+    standalone_func.__dict__.update(copy.deepcopy(func.__dict__))
     standalone_func.__name__ = name
     return standalone_func
 
@@ -137,12 +147,19 @@ def dataprovider(data):
     return wrapper
 
 
+def _add_property(func, property_name, data):
+    if hasattr(func, '_property_provided'):
+        func._property_provided += [(property_name, data)]
+    else:
+        func._property_provided = [(property_name, data)]
+
+
 def property_provider(property_name, data):
     def wrapper(func):
         if inspect.isclass(func):
             for method_name, method in inspect.getmembers(func, predicate=inspect.ismethod):
-                method.__func__._property_provided = (property_name, data)
+                _add_property(method.__func__, property_name, data)
         else:
-            func._property_provided = (property_name, data)
+            _add_property(func, property_name, data)
         return func
     return wrapper
