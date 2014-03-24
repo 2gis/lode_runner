@@ -15,8 +15,8 @@ tests_to_run = [
     "test_function_dataprovider_1",
     "test_function_dataprovider_2",
     "test_function_dataprovider_3",
-    "test_unicode_string_dataprovider_первый тест",
-    u"test_unicode_string_dataprovider_второй тест",
+    "test_unicode_string_dataprovider_Первый Тест",
+    u"test_unicode_string_dataprovider_Второй Тест",
     "test_class_dataprovider_1",
     "test_class_dataprovider_2",
     "test_class_dataprovider_3",
@@ -58,9 +58,13 @@ class DataproviderTest(unittest.TestCase):
     def test_function_dataprovider(self, data):
         tests_to_run.remove("%s_%s" % ("test_function_dataprovider", data))
 
-    @dataprovider(['первый тест', u"второй тест"])
+    @dataprovider(['Первый Тест', u"Второй Тест"])
     def test_unicode_string_dataprovider(self, data):
         tests_to_run.remove("%s_%s" % ("test_unicode_string_dataprovider", data))
+
+    @dataprovider([u"Первый тест"])
+    def test_failed_test_with_unicode_string_in_dataprovider(self, data):
+        self.assertEqual(u"test_unicode_string_dataprovider_первый тест", u"test_unicode_string_dataprovider_" + data)
 
     @dataprovider([['первый тест', u'второй тест']])
     def test_list_dataprovider(self, data):
