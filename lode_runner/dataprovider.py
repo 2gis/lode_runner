@@ -2,10 +2,29 @@ import logging
 import os
 import inspect
 import copy
+import collections
+import re
 
 
 from nose.plugins import Plugin
 log = logging.getLogger('nose.plugins.dataprovider')
+
+
+class CustomString(object):
+    def __init__(self, string):
+        self.string = string
+
+    def __repr__(self):
+        _tmp = repr(self.string)
+        string = _to_str(self.string)
+        new_repr = re.sub("'.+'", "'" + string + "'", _tmp)
+        return new_repr
+
+    def __str__(self):
+        return self.string
+
+    def __radd__(self, other):
+        return other + self.__repr__()
 
 
 class Dataprovider(Plugin):
@@ -46,11 +65,31 @@ class Dataprovider(Plugin):
             return tests
 
 
+def _to_str(value, custom=False):
+    if custom:
+        return CustomString(value)
+    else:
+        try:
+            return str(value)
+        except UnicodeEncodeError:
+            return value.encode(encoding='utf-8')
+
+
+def _convert(data):
+    if isinstance(data, basestring):
+        return _to_str(data, True)
+    elif isinstance(data, collections.Mapping):
+        return dict(map(_convert, data.iteritems()))
+    elif isinstance(data, collections.Iterable):
+        return type(data)(map(_convert, data))
+    else:
+        return data
+
+
 def _data_set_safe_name(data_set):
-    try:
-        return str(data_set)
-    except UnicodeEncodeError:
-        return unicode(data_set).encode(encoding='utf-8')
+    if hasattr(data_set, "__iter__"):
+        data_set = _convert(data_set)
+    return _to_str(data_set)
 
 
 def _make_dataprovided_tests(test):
@@ -63,7 +102,8 @@ def _make_dataprovided_tests(test):
 
         dataprovided_tests = []
         for data_set in _data:
-            name = testMethod.__name__ + "_" + _data_set_safe_name(data_set)
+            safe_name = _data_set_safe_name(data_set)
+            name = testMethod.__name__ + "_" + safe_name
             new_test_func = _make_func(testMethod, name, data_set)
             setattr(parent, new_test_func.__name__, new_test_func)
             new_test = parent(new_test_func.__name__)
@@ -108,10 +148,8 @@ def _make_data(data):
 
 
 def _make_func(func, name, data_set=None):
-    if not isinstance(data_set, tuple) and data_set:
-        data_set = (data_set, )
-
     if data_set:
+        data_set = (data_set, )
         standalone_func = lambda *args: func(*(args + data_set))
     else:
         standalone_func = lambda *args: func(*args)
