@@ -148,8 +148,10 @@ def _make_data(data):
 
 
 def _make_func(func, name, data_set=None):
-    if data_set:
+    if data_set and not isinstance(data_set, tuple):
         data_set = (data_set, )
+
+    if data_set:
         standalone_func = lambda *args: func(*(args + data_set))
     else:
         standalone_func = lambda *args: func(*args)

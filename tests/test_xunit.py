@@ -10,7 +10,8 @@ class XunitTest(unittest.TestCase):
          'parking', u'Парковка ТРЦ Аура',
          u'Военная, 5Подземная, 2 этажа Общедоступная, платная первые 3 часа - бесплатно 1600 мест'),
     ])
-    def test_failed_test_with_unicode_string_in_output(self, data):
-        print "тест"
-        print u'тест'
+    def test_failed_test_with_unicode_string_in_output(self, lat, lng, zoom, attr, type_, title, description):
+        a = "тест"
+        b = u'тест'
+        print a, b
         self.assertTrue(True)
