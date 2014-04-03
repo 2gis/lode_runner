@@ -84,8 +84,8 @@ class NestedDataprovidersTest(unittest.TestCase):
         tests_to_run.remove(test_name)
 
     @dataprovider([('первый тест', u'второй тест')])
-    def test_tuple_dataprovider(self, data):
-        tuple_string = "('%s', u'%s')" % (data[0], data[1].encode('utf-8'))
+    def test_tuple_dataprovider(self, first, second):
+        tuple_string = "('%s', u'%s')" % (first, second.encode('utf-8'))
         tests_to_run.remove("%s_%s" % ("test_tuple_dataprovider", tuple_string))
 
 
