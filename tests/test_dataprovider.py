@@ -62,11 +62,6 @@ class DataproviderTest(unittest.TestCase):
     def test_unicode_string_dataprovider(self, data):
         tests_to_run.remove("%s_%s" % ("test_unicode_string_dataprovider", data))
 
-    @dataprovider([(55.028748, 82.936757, 18, 'data.attributes.filials,data.attributes.sight,data.geometry.selection', 'parking', u'Парковка ТРЦ Аура', u'Военная, 5Подземная, 2 этажа Общедоступная, платная первые 3 часа - бесплатно 1600 мест')])
-    def test_failed_test_with_unicode_string_in_dataprovider(self, data):
-        print data
-        self.assertTrue(False)
-
     @dataprovider([1])
     def test_setup_runs(self, data):
         self.assertTrue(self.set_up_called)
