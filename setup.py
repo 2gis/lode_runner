@@ -9,8 +9,8 @@ setup(
     author_email='nwlunatic@yandex.ru',
     packages=find_packages(),
     install_requires=[
-        'nose',
-        'nose-testconfig',
+        "nose == 1.3.0",
+        "nose-testconfig",
     ],
     scripts=['bin/lode_runner'],
 )
