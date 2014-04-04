@@ -20,3 +20,17 @@ class Xunit(Xunit):
         self._currentStderr = StringIO()
         sys.stdout = Tee(self._currentStdout, sys.stdout)
         sys.stderr = Tee(self._currentStderr, sys.stderr)
+
+    def addError(self, test, err, capt=None):
+        ec, ev, tb = err
+        if isinstance(ev, unicode):
+            ev = ev.encode(self.encoding)
+        err = (ec, ev, tb)
+        super(Xunit, self).addError(test, err, capt)
+
+    def addFailure(self, test, err, capt=None, tb_info=None):
+        ec, ev, tb = err
+        if isinstance(ev, unicode):
+            ev = ev.encode(self.encoding)
+        err = (ec, ev, tb)
+        super(Xunit, self).addFailure(test, err, capt, tb_info)
