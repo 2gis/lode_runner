@@ -4,6 +4,9 @@ from nose.loader import TestLoader
 from nose.suite import ContextSuiteFactory
 from unittest import suite
 
+from .dataprovider import Dataprovider
+from .xunit import Xunit
+
 
 class ResultProxy(ResultProxy):
     def assertMyTest(self, test):
@@ -86,3 +89,7 @@ class LodeProgram(TestProgram):
             config=self.config)
 
         super(LodeProgram, self).runTests()
+
+
+def main():
+    LodeProgram(addplugins=[Dataprovider(), Xunit()], testLoader=TestLoader)
