@@ -1,9 +1,0 @@
-#!/usr/bin/env python
-from lode_runner.lode_runner import TestLoader
-from lode_runner.lode_runner import LodeProgram
-from lode_runner.dataprovider import Dataprovider
-from lode_runner.xunit import Xunit
-
-
-if __name__ == '__main__':
-    LodeProgram(addplugins=[Dataprovider(), Xunit()], testLoader=TestLoader)
