@@ -2,11 +2,6 @@ import logging
 import os
 import sys
 
-from contesto.basis.test_case import ContestoTestCase
-
-
-_start_driver = ContestoTestCase._start_driver
-
 
 class Colors(object):
     HEADER = '\033[95m'
@@ -42,10 +37,6 @@ def start_driver(cls, desired_capabilities, command_executor):
     return driver
 
 
-def patch():
-    ContestoTestCase._start_driver = start_driver
-
-
 from nose.plugins import Plugin
 log = logging.getLogger('nose.plugins.printer')
 
@@ -63,4 +54,6 @@ class ContestoPlugin(Plugin):
             return
 
     def begin(self):
-        patch()
+        from contesto.basis.test_case import ContestoTestCase
+        _start_driver = ContestoTestCase._start_driver
+        ContestoTestCase._start_driver = start_driver
