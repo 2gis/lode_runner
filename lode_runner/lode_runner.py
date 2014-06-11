@@ -6,6 +6,7 @@ from unittest import suite
 
 from .dataprovider import Dataprovider
 from .xunit import Xunit
+from .contesto_plugin import ContestoPlugin
 
 
 class ResultProxy(ResultProxy):
@@ -40,38 +41,24 @@ class TestLoader(TestLoader):
     def loadTestsFromTestCase(self, testCaseClass):
         """Return a suite of all tests cases contained in testCaseClass"""
         if issubclass(testCaseClass, suite.TestSuite):
-            raise TypeError("Test cases should not be derived from TestSuite." \
-                                " Maybe you meant to derive from TestCase?")
-        testCaseNames = self.getTestCaseNames(testCaseClass)
-        if not testCaseNames and hasattr(testCaseClass, 'runTest'):
-            testCaseNames = ['runTest']
+            raise TypeError("Test cases should not be derived from TestSuite."
+                            " Maybe you meant to derive from TestCase?")
+        test_case_names = self.getTestCaseNames(testCaseClass)
+        if not test_case_names and hasattr(testCaseClass, 'runTest'):
+            test_case_names = ['runTest']
 
-        if testCaseNames:
-            return self._makeTest(testCaseNames, testCaseClass)
+        if test_case_names:
+            return self._makeTest(test_case_names, testCaseClass)
         else:
             return super(TestLoader, self).loadTestsFromTestCase(testCaseClass)
 
 
 class LodeTestResult(TextTestResult):
     pass
-    # TODO: fix printErrorList for different encoding
-    # def printErrorList(self, flavour, errors):
-    #     unicode_escaped_errors = []
-    #     for test, _err in errors:
-    #         try:
-    #             error_str = str(_err)
-    #         except UnicodeEncodeError:
-    #             error = unicode(_err)
-    #         else:
-    #             # 'ignore': ignore malformed data and continue decoding without further notice
-    #             error = error_str.decode(encoding='unicode-escape', errors='ignore')
-    #         unicode_escaped_errors.append((test, error))
-    #     super(LodeTestResult, self).printErrorList(flavour, unicode_escaped_errors)
 
 
 class LodeRunner(TextTestRunner):
     def _makeResult(self):
-        # return LodeTestResult(
         return LodeTestResult(
             self.stream,
             self.descriptions,
@@ -92,4 +79,4 @@ class LodeProgram(TestProgram):
 
 
 def main():
-    LodeProgram(addplugins=[Dataprovider(), Xunit()], testLoader=TestLoader)
+    LodeProgram(addplugins=[Dataprovider(), Xunit(), ContestoPlugin()], testLoader=TestLoader)
