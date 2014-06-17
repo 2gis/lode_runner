@@ -208,20 +208,20 @@ class LodeJsonReporter(Plugin):
                 return value
         return ''
 
-    def form_test_report(self, test, err=None, type=None):
+    def form_test_report(self, test, err=None, status=None):
         time = self._timeTaken()
         id = test.id()
         test_actions = test.test_actions
 
-        if not type:
-            type = 'success'
+        if not status:
+            status = 'success'
 
         report = {
             'classname': id_split(id)[0],
             'name': id_split(id)[-1],
             'test_actions': test_actions,
             'time': time,
-            'type': type,
+            'status': status,
             'systemout': self._getCapturedStdout(),
             'systemerr': self._getCapturedStderr(),
         }
@@ -239,19 +239,19 @@ class LodeJsonReporter(Plugin):
         """Add error output to Xunit report.
         """
         if issubclass(err[0], SkipTest):
-            type = 'skipped'
+            status = 'skipped'
             self.stats['skipped'] += 1
         else:
-            type = 'error'
+            status = 'error'
             self.stats['errors'] += 1
 
-        self.form_test_report(test, err, type)
+        self.form_test_report(test, err, status)
 
     def addFailure(self, test, err, capt=None, tb_info=None):
         self.stats['failures'] += 1
-        type = 'fail'
+        status = 'fail'
 
-        self.form_test_report(test, err, type)
+        self.form_test_report(test, err, status)
 
     def addSuccess(self, test, capt=None):
         self.stats['passes'] += 1
