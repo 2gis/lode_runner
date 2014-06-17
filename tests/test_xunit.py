@@ -4,6 +4,7 @@ import os
 import optparse
 import sys
 import re
+from xml.etree import ElementTree
 
 from nose.config import Config
 
@@ -33,13 +34,6 @@ class XunitTest(unittest.TestCase):
             "--xunit-file=%s" % self.xmlfile
         ])
         self.x.configure(options, Config())
-
-        try:
-            import xml.etree.ElementTree
-        except ImportError:
-            self.ET = False
-        else:
-            self.ET = xml.etree.ElementTree
 
     def tearDown(self):
         os.unlink(self.xmlfile)
@@ -76,25 +70,24 @@ class XunitTest(unittest.TestCase):
 
         result = self.get_xml_report()
 
-        if self.ET:
-            tree = self.ET.fromstring(result)
-            self.assertEqual(tree.attrib['name'], "nosetests")
-            self.assertEqual(tree.attrib['tests'], "1")
-            self.assertEqual(tree.attrib['errors'], "0")
-            self.assertEqual(tree.attrib['failures'], "1")
-            self.assertEqual(tree.attrib['skip'], "0")
+        tree = ElementTree.fromstring(result)
+        self.assertEqual(tree.attrib['name'], "nosetests")
+        self.assertEqual(tree.attrib['tests'], "1")
+        self.assertEqual(tree.attrib['errors'], "0")
+        self.assertEqual(tree.attrib['failures'], "1")
+        self.assertEqual(tree.attrib['skip'], "0")
 
-            tc = tree.find("testcase")
-            self.assertEqual(tc.attrib['classname'], "test_xunit.TestCase")
-            self.assertEqual(tc.attrib['name'], "runTest")
-            assert time_taken.match(tc.attrib['time']), (
-                        'Expected decimal time: %s' % tc.attrib['time'])
+        tc = tree.find("testcase")
+        self.assertEqual(tc.attrib['classname'], "test_xunit.TestCase")
+        self.assertEqual(tc.attrib['name'], "runTest")
+        assert time_taken.match(tc.attrib['time']), (
+                    'Expected decimal time: %s' % tc.attrib['time'])
 
-            err = tc.find("failure")
-            self.assertEqual(err.attrib['type'], "%s.AssertionError" % (AssertionError.__module__,))
-            err_lines = err.text.strip().split("\n")
-            self.assertEqual(err_lines[-1], str)
-            self.assertEqual(err_lines[-2], '    raise AssertionError(str)')
+        err = tc.find("failure")
+        self.assertEqual(err.attrib['type'], "%s.AssertionError" % (AssertionError.__module__,))
+        err_lines = err.text.strip().split("\n")
+        self.assertEqual(err_lines[-1], str)
+        self.assertEqual(err_lines[-2], '    raise AssertionError(str)')
 
     def test_addError(self):
         test = mktest()
@@ -113,22 +106,21 @@ class XunitTest(unittest.TestCase):
 
         result = self.get_xml_report()
 
-        if self.ET:
-            tree = self.ET.fromstring(result)
-            self.assertEqual(tree.attrib['name'], "nosetests")
-            self.assertEqual(tree.attrib['tests'], "1")
-            self.assertEqual(tree.attrib['errors'], "1")
-            self.assertEqual(tree.attrib['failures'], "0")
-            self.assertEqual(tree.attrib['skip'], "0")
+        tree = ElementTree.fromstring(result)
+        self.assertEqual(tree.attrib['name'], "nosetests")
+        self.assertEqual(tree.attrib['tests'], "1")
+        self.assertEqual(tree.attrib['errors'], "1")
+        self.assertEqual(tree.attrib['failures'], "0")
+        self.assertEqual(tree.attrib['skip'], "0")
 
-            tc = tree.find("testcase")
-            self.assertEqual(tc.attrib['classname'], "test_xunit.TestCase")
-            self.assertEqual(tc.attrib['name'], "runTest")
-            assert time_taken.match(tc.attrib['time']), (
-                        'Expected decimal time: %s' % tc.attrib['time'])
+        tc = tree.find("testcase")
+        self.assertEqual(tc.attrib['classname'], "test_xunit.TestCase")
+        self.assertEqual(tc.attrib['name'], "runTest")
+        assert time_taken.match(tc.attrib['time']), (
+                    'Expected decimal time: %s' % tc.attrib['time'])
 
-            err = tc.find("error")
-            self.assertEqual(err.attrib['type'], "%s.RuntimeError" % (RuntimeError.__module__,))
-            err_lines = err.text.strip().split("\n")
-            self.assertEqual(err_lines[-1], str)
-            self.assertEqual(err_lines[-2], '    raise RuntimeError(str)')
+        err = tc.find("error")
+        self.assertEqual(err.attrib['type'], "%s.RuntimeError" % (RuntimeError.__module__,))
+        err_lines = err.text.strip().split("\n")
+        self.assertEqual(err_lines[-1], str)
+        self.assertEqual(err_lines[-2], '    raise RuntimeError(str)')
