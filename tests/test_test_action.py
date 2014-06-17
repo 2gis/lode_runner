@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
 import cStringIO
-import argparse
 
 from lode_runner import TestAction
 
@@ -12,6 +11,24 @@ def temp(test_action):
 
 
 class TestActionTest(unittest.TestCase):
+    """
+    Common use is:
+    from lode_runner import TestAction
+
+
+    class Test(unittest.TestCase):
+        def test(self):
+            with TestAction(u"doing stuff"):
+                do_stuff()
+
+            with TestAction(u"doing another stuff"):
+                do_another_stuff()
+
+            with TestAction(u"making assertions"):
+                self.assertTrue(True)
+                self.assertFalse(False)
+    """
+
     def setUp(self):
         self._resultForDoCleanups.config.verbosity = 2
 
