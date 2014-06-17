@@ -2,5 +2,5 @@ language: python
 python:
   - "2.7"
 install:
-  - "pip install git+https://github.com/2gis/contesto.git#egg=contesto"
-script: "python setup.py install && PYTHONPATH=`pwd` lode_runner tests/ --with-xunit --with-contesto"
+  - "python setup.py install"
+script: "PYTHONPATH=`pwd` lode_runner tests/"

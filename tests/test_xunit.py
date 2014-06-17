@@ -75,7 +75,6 @@ class XunitTest(unittest.TestCase):
         self.x.addFailure(test, some_err)
 
         result = self.get_xml_report()
-        print result
 
         if self.ET:
             tree = self.ET.fromstring(result)
@@ -94,7 +93,6 @@ class XunitTest(unittest.TestCase):
             err = tc.find("failure")
             self.assertEqual(err.attrib['type'], "%s.AssertionError" % (AssertionError.__module__,))
             err_lines = err.text.strip().split("\n")
-            print err_lines
             self.assertEqual(err_lines[-1], str)
             self.assertEqual(err_lines[-2], '    raise AssertionError(str)')
 
@@ -114,7 +112,6 @@ class XunitTest(unittest.TestCase):
         self.x.addError(test, some_err)
 
         result = self.get_xml_report()
-        print result
 
         if self.ET:
             tree = self.ET.fromstring(result)
@@ -133,6 +130,5 @@ class XunitTest(unittest.TestCase):
             err = tc.find("error")
             self.assertEqual(err.attrib['type'], "%s.RuntimeError" % (RuntimeError.__module__,))
             err_lines = err.text.strip().split("\n")
-            print err_lines
             self.assertEqual(err_lines[-1], str)
             self.assertEqual(err_lines[-2], '    raise RuntimeError(str)')
