@@ -7,6 +7,7 @@ from unittest import suite
 from .dataprovider import Dataprovider
 from .xunit import Xunit
 from .contesto_plugin import ContestoPlugin
+from .json_reporter import LodeJsonReporter
 
 
 class ResultProxy(ResultProxy):
@@ -79,4 +80,4 @@ class LodeProgram(TestProgram):
 
 
 def main():
-    LodeProgram(addplugins=[Dataprovider(), Xunit(), ContestoPlugin()], testLoader=TestLoader)
+    LodeProgram(addplugins=[Dataprovider(), Xunit(), ContestoPlugin(), LodeJsonReporter()], testLoader=TestLoader)
