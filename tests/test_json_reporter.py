@@ -81,6 +81,7 @@ class XunitTest(unittest.TestCase):
         tc = result['testcases'][0]
         self.assertEqual(tc['classname'], u"test_json_reporter.TestCase")
         self.assertEqual(tc['name'], "runTest")
+        self.assertEqual(tc['status'], "fail")
         self.assertTrue(time_taken.match(unicode(tc['time'])),
                         'Expected decimal time: %s' % tc['time'])
 
@@ -120,6 +121,7 @@ class XunitTest(unittest.TestCase):
         tc = result['testcases'][0]
         self.assertEqual(tc['classname'], "test_json_reporter.TestCase")
         self.assertEqual(tc['name'], "runTest")
+        self.assertEqual(tc['status'], "error")
         self.assertTrue(time_taken.match(unicode(tc['time'])),
                         'Expected decimal time: %s' % tc['time'])
 
@@ -128,3 +130,29 @@ class XunitTest(unittest.TestCase):
         err_lines = err['tb'].strip().split("\n")
         self.assertEqual(err_lines[-1], str)
         self.assertEqual(err_lines[-2], '    raise RuntimeError(str)')
+
+    def test_addSuccess(self):
+        test = mktest()
+        self.x.beforeTest(test)
+
+        self.x.addSuccess(test)
+
+        result = json.loads(self.get_json_report())
+
+        stats = result['stats']
+        self.assertEqual(stats, {
+            u'total': 1,
+            u'errors': 0,
+            u'failures': 0,
+            u'skipped': 0,
+            u'passes': 1
+        })
+
+        tc = result['testcases'][0]
+        self.assertEqual(tc['classname'], "test_json_reporter.TestCase")
+        self.assertEqual(tc['name'], "runTest")
+        self.assertEqual(tc['status'], "success")
+        self.assertTrue(time_taken.match(unicode(tc['time'])),
+                        'Expected decimal time: %s' % tc['time'])
+
+        self.assertTrue(not tc.get('error'))
