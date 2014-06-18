@@ -71,13 +71,24 @@ class LodeRunner(TextTestRunner):
 
 class LodeProgram(TestProgram):
     def runTests(self):
-        self.testRunner = LodeRunner(
-            stream=self.config.stream,
-            verbosity=self.config.verbosity,
-            config=self.config)
+        if self.testRunner is None:
+            self.testRunner = LodeRunner(
+                stream=self.config.stream,
+                verbosity=self.verbosity,
+                config=self.config)
 
         super(LodeProgram, self).runTests()
 
 
+plugins = [Dataprovider(), Xunit(), ContestoPlugin(), LodeJsonReporter()]
+
+
 def main():
-    LodeProgram(addplugins=[Dataprovider(), Xunit(), ContestoPlugin(), LodeJsonReporter()], testLoader=TestLoader)
+    LodeProgram(addplugins=plugins, testLoader=TestLoader)
+
+
+def run(*args, **kwargs):
+    kwargs['exit'] = False
+    kwargs['addplugins'] = plugins
+    kwargs['testLoader'] = TestLoader
+    return LodeProgram(*args, **kwargs).success
