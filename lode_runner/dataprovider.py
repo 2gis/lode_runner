@@ -52,7 +52,7 @@ class Dataprovider(Plugin):
 
         tests = _tests
         _tests = []
-        while(tests):
+        while tests:
             test = tests.pop(0)
             _test = _make_property_provided_tests(test)
             if _test == [test]:

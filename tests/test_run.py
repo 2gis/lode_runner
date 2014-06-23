@@ -13,7 +13,7 @@ def mksuite():
             pass
     test = TestCase()
 
-    return unittest.TestSuite([test])
+    return [test]
 
 
 class TestRun(unittest.TestCase):

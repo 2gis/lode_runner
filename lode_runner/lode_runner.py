@@ -2,12 +2,33 @@ from nose.core import TextTestResult, TextTestRunner, TestProgram
 from nose.proxy import ResultProxyFactory, ResultProxy
 from nose.loader import TestLoader
 from nose.suite import ContextSuiteFactory
+from nose.case import Test
 from unittest import suite
 
 from .dataprovider import Dataprovider
 from .xunit import Xunit
 from .contesto_plugin import ContestoPlugin
 from .json_reporter import LodeJsonReporter
+from .priority import AttributeSelector
+
+
+class ContextSuiteFactory(ContextSuiteFactory):
+    def makeSuite(self, tests, context, **kw):
+        _tests = list()
+        for test in tests:
+            if isinstance(test, Test):
+                test_method = getattr(test.test, test.test._testMethodName).__func__
+                if hasattr(test.test, 'priority'):
+                    priority = test.test.priority
+                elif hasattr(test_method, 'priority'):
+                    priority = test_method.priority
+                else:
+                    priority = "unknown"
+
+                test.priority = priority
+
+            _tests.append(test)
+        return super(ContextSuiteFactory, self).makeSuite(_tests, context, **kw)
 
 
 class ResultProxy(ResultProxy):
@@ -80,15 +101,25 @@ class LodeProgram(TestProgram):
         super(LodeProgram, self).runTests()
 
 
-plugins = [Dataprovider(), Xunit(), ContestoPlugin(), LodeJsonReporter()]
+# must return always new set of plugins
+def plugins():
+    return [
+        Dataprovider(),
+        Xunit(),
+        ContestoPlugin(),
+        LodeJsonReporter(),
+        AttributeSelector()
+    ]
 
 
 def main():
-    LodeProgram(addplugins=plugins, testLoader=TestLoader)
+    LodeProgram(
+        addplugins=plugins(),
+        testLoader=TestLoader)
 
 
 def run(*args, **kwargs):
     kwargs['exit'] = False
-    kwargs['addplugins'] = plugins
+    kwargs['addplugins'] = plugins()
     kwargs['testLoader'] = TestLoader
     return LodeProgram(*args, **kwargs).success

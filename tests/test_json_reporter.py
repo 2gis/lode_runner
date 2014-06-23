@@ -9,6 +9,7 @@ import json
 from nose.config import Config
 
 from lode_runner.json_reporter import LodeJsonReporter
+from lode_runner.lode_runner import ContextSuiteFactory
 
 
 time_taken = re.compile(r'\d\.\d\d')
@@ -19,10 +20,11 @@ def mktest():
         def runTest(self):
             pass
     test = TestCase()
+    test.priority = 'unknown'
     return test
 
 
-class XunitTest(unittest.TestCase):
+class JsonReporterTest(unittest.TestCase):
     def setUp(self):
         self.reportfile = os.path.abspath(
             os.path.join(os.path.dirname(__file__), 'report.json'))
@@ -34,6 +36,7 @@ class XunitTest(unittest.TestCase):
             "--lode-report=%s" % self.reportfile
         ])
         self.x.configure(options, Config())
+        suite = ContextSuiteFactory
 
     def tearDown(self):
         os.unlink(self.reportfile)
@@ -79,9 +82,17 @@ class XunitTest(unittest.TestCase):
         })
 
         tc = result['testcases'][0]
-        self.assertEqual(tc['classname'], u"test_json_reporter.TestCase")
-        self.assertEqual(tc['name'], "runTest")
-        self.assertEqual(tc['status'], "fail")
+        tc_report = {
+            u'status': u'fail',
+            u'systemerr': u'',
+            u'name': u'runTest',
+            u'systemout': u'',
+            u'actions': [],
+            u'classname': u'test_json_reporter.TestCase',
+            u'priority': u'unknown'
+        }
+
+        self.assertDictContainsSubset(tc_report, tc)
         self.assertTrue(time_taken.match(unicode(tc['time'])),
                         'Expected decimal time: %s' % tc['time'])
 
@@ -119,9 +130,17 @@ class XunitTest(unittest.TestCase):
         })
 
         tc = result['testcases'][0]
+        tc_report = {
+            u'status': u'error',
+            u'systemerr': u'',
+            u'name': u'runTest',
+            u'systemout': u'',
+            u'actions': [],
+            u'classname': u'test_json_reporter.TestCase',
+            u'priority': u'unknown'
+        }
+        self.assertDictContainsSubset(tc_report, tc)
         self.assertEqual(tc['classname'], "test_json_reporter.TestCase")
-        self.assertEqual(tc['name'], "runTest")
-        self.assertEqual(tc['status'], "error")
         self.assertTrue(time_taken.match(unicode(tc['time'])),
                         'Expected decimal time: %s' % tc['time'])
 
@@ -149,9 +168,15 @@ class XunitTest(unittest.TestCase):
         })
 
         tc = result['testcases'][0]
-        self.assertEqual(tc['classname'], "test_json_reporter.TestCase")
-        self.assertEqual(tc['name'], "runTest")
-        self.assertEqual(tc['status'], "success")
+        tc_report = {
+            u'status': u'success',
+            u'systemerr': u'',
+            u'name': u'runTest',
+            u'systemout': u'', u'actions': [],
+            u'classname': u'test_json_reporter.TestCase',
+            u'priority': u'unknown'
+        }
+        self.assertDictContainsSubset(tc_report, tc)
         self.assertTrue(time_taken.match(unicode(tc['time'])),
                         'Expected decimal time: %s' % tc['time'])
 
