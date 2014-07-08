@@ -18,7 +18,7 @@ def mksuite():
     return [test]
 
 
-class TestRun(unittest.TestCase):
+class TestVerbosity(unittest.TestCase):
     def test_verbosity_1(self):
         stream = StringIO()
         result = run(suite=mksuite(), testRunner=LodeRunner(stream=stream, verbosity=1))
