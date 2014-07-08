@@ -95,7 +95,7 @@ class LodeProgram(TestProgram):
         if self.testRunner is None:
             self.testRunner = LodeRunner(
                 stream=self.config.stream,
-                verbosity=self.verbosity,
+                verbosity=self.config.verbosity,
                 config=self.config)
 
         super(LodeProgram, self).runTests()
