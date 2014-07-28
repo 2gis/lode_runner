@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from collections import namedtuple
 import unittest
 
 from lode_runner.dataprovider import dataprovider
@@ -23,6 +23,7 @@ tests_to_run = [
     "test_dict_dataprovider_{'two': u'второй тест', 'one': 'первый тест'}",
     "test_list_dataprovider_['первый тест', u'второй тест']",
     "test_tuple_dataprovider_('первый тест', u'второй тест')",
+    "test_dict_dataprovider_{'one': 'первый тест', 'two': u'второй тест'}",
 ]
 
 
@@ -87,6 +88,16 @@ class NestedDataprovidersTest(unittest.TestCase):
     def test_tuple_dataprovider(self, first, second):
         tuple_string = "('%s', u'%s')" % (first, second.encode('utf-8'))
         tests_to_run.remove("%s_%s" % ("test_tuple_dataprovider", tuple_string))
+
+    TestNamedTuple = namedtuple('TestNamedTuple', 'one two')
+    @dataprovider([(TestNamedTuple('первый тест', u'второй тест'),)])
+    def test_namedtuple_dataprovider(self, data):
+        l = list(data._asdict().iteritems())
+        key1, value1 = l[0]
+        key2, value2 = l[1]
+        dict_string = "{'%s': '%s', '%s': u'%s'}" % (key1, value1, key2, value2.encode('utf-8'))
+        test_name = "%s_%s" % ("test_dict_dataprovider", dict_string)
+        tests_to_run.remove(test_name)
 
 
 @dataprovider([1, 2, 3])
