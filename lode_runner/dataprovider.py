@@ -78,6 +78,8 @@ def _to_str(value, custom=False):
 def _convert(data):
     if isinstance(data, basestring):
         return _to_str(data, True)
+    elif isinstance(data, tuple) and hasattr(data, '_asdict'):  # Handle namedtuple
+        return dict(map(_convert, data._asdict().iteritems()))
     elif isinstance(data, collections.Mapping):
         return dict(map(_convert, data.iteritems()))
     elif isinstance(data, collections.Iterable):
