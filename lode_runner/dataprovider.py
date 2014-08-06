@@ -6,7 +6,6 @@ import collections
 import re
 import sys
 
-
 from nose.plugins import Plugin
 log = logging.getLogger('nose.plugins.dataprovider')
 

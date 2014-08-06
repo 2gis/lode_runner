@@ -11,6 +11,7 @@ from .xunit import Xunit
 from .contesto_plugin import ContestoPlugin
 from .json_reporter import LodeJsonReporter
 from .priority import AttributeSelector
+from .multiprocess import MultiProcess
 
 
 class ContextSuiteFactory(ContextSuiteFactory):
@@ -110,7 +111,8 @@ def plugins():
         Xunit(),
         ContestoPlugin(),
         LodeJsonReporter(),
-        AttributeSelector()
+        AttributeSelector(),
+        MultiProcess()
     ]
 
 

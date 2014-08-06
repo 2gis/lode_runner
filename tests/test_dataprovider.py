@@ -17,6 +17,7 @@ tests_to_run = [
     "test_function_dataprovider_3",
     "test_unicode_string_dataprovider_Первый Тест",
     u"test_unicode_string_dataprovider_Второй Тест",
+    "test_single_dataprovider_('.1', u'/2')",
     "test_class_dataprovider_1",
     "test_class_dataprovider_2",
     "test_class_dataprovider_3",
@@ -68,6 +69,15 @@ class DataproviderTest(unittest.TestCase):
         self.assertTrue(self.set_up_class_called)
 
 
+class SingleDataproviderTest(unittest.TestCase):
+    @dataprovider([
+        ('.1', u'/2'),
+    ])
+    def test_single_dataprovider(self, data1, data2):
+        tuple_string = "('%s', u'%s')" % (data1, data2.encode('utf-8'))
+        tests_to_run.remove("%s_%s" % ("test_single_dataprovider", tuple_string))
+
+
 class NestedDataprovidersTest(unittest.TestCase):
     @dataprovider([['первый тест', u'второй тест']])
     def test_list_dataprovider(self, data):
@@ -98,3 +108,4 @@ class ClassDataproviderTest(unittest.TestCase):
 class TestAllTestsRan(unittest.TestCase):
     def test_all_tests_ran(self):
         self.assertEqual([], tests_to_run)
+
