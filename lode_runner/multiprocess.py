@@ -1,11 +1,20 @@
 # coding: utf-8
 
+import unittest
+
 from nose.plugins.multiprocess import MultiProcessTestRunner, MultiProcess
+from nose.suite import ContextSuite
 
 
 class MultiProcess(MultiProcess):
     def prepareTestRunner(self, runner):
-        super(MultiProcess, self).prepareTestRunner(runner)
+        """Replace test runner with MultiProcessTestRunner.
+        """
+        # replace with our runner class
+        return MultiProcessTestRunner(stream=runner.stream,
+                                      verbosity=self.config.verbosity,
+                                      config=self.config,
+                                      loaderClass=self.loaderClass)
 
 
 class MultiProcessTestRunner(MultiProcessTestRunner):
