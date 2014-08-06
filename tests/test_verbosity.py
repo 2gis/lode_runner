@@ -23,18 +23,22 @@ class TestVerbosity(unittest.TestCase):
         stream = StringIO()
         result = run(suite=mksuite(), testRunner=LodeRunner(stream=stream, verbosity=1))
         self.assertEqual(".", stream.getvalue().split("\n")[0])
+        self.assertTrue(result)
 
     def test_verbosity_2(self):
         stream = StringIO()
         result = run(suite=mksuite(), testRunner=LodeRunner(stream=stream, verbosity=2))
         self.assertEqual("runTest (test_verbosity.TestCase) ... ok", stream.getvalue().split("\n")[0])
+        self.assertTrue(result)
 
     def test_verbosity_1_config(self):
         stream = StringIO()
         result = run(suite=mksuite(), config=Config(verbosity=1, stream=stream, plugins=DefaultPluginManager()))
         self.assertEqual(".", stream.getvalue().split("\n")[0])
+        self.assertTrue(result)
 
     def test_verbosity_2_config(self):
         stream = StringIO()
         result = run(suite=mksuite(), config=Config(verbosity=2, stream=stream, plugins=DefaultPluginManager()))
         self.assertEqual("runTest (test_verbosity.TestCase) ... ok", stream.getvalue().split("\n")[0])
+        self.assertTrue(result)
