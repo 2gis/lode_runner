@@ -4,6 +4,7 @@ import inspect
 import copy
 import collections
 import re
+import sys
 
 
 from nose.plugins import Plugin
@@ -47,18 +48,21 @@ class Dataprovider(Plugin):
             tests = [parent(obj.__name__)]
 
         _tests = []
-        for test in tests:
-            _tests += _make_dataprovided_tests(test)
-
-        tests = _tests
-        _tests = []
         while tests:
             test = tests.pop(0)
             _test = _make_property_provided_tests(test)
+            # _test = _make_dataprovided_tests(test)
             if _test == [test]:
                 _tests += _test
             else:
                 tests += _test
+
+        tests = _tests
+
+        _tests = []
+        for test in tests:
+            _tests += _make_dataprovided_tests(test)
+            # _tests += _make_property_provided_tests(test)
 
         tests = _tests
         if len(tests) > 0:
@@ -111,6 +115,8 @@ def _make_dataprovided_tests(test):
             new_test = parent(new_test_func.__name__)
             dataprovided_tests.append(new_test)
 
+        delattr(parent, testMethod.__name__)
+
         return dataprovided_tests
     else:
         return [test]
@@ -125,15 +131,27 @@ def _make_property_provided_tests(test):
 
         property_provided_tests = []
         for data_set in _data:
-            new_parent = type(parent.__name__ + "_" + _data_set_safe_name(data_set), (parent,), {})
-            setattr(new_parent, property_name, data_set)
+            new_parent_name = parent.__name__ + "_" + _data_set_safe_name(data_set)
+            if hasattr(sys.modules[parent.__module__], new_parent_name):
+                new_parent = getattr(sys.modules[parent.__module__], new_parent_name)
+            else:
+                new_parent = type(new_parent_name, (parent,), {'__module__': parent.__module__})
+                setattr(sys.modules[new_parent.__module__], new_parent_name, new_parent)
+
             name = testMethod.__name__ + "_" + _data_set_safe_name(data_set)
+            # print name
+            # print new_parent.__dict__
+            setattr(new_parent, property_name, data_set)
+
             new_test_func = _make_func(testMethod, name)
             if new_test_func._property_provided == []:
                 del new_test_func._property_provided
             setattr(new_parent, new_test_func.__name__, new_test_func)
             new_test = new_parent(new_test_func.__name__)
             property_provided_tests.append(new_test)
+
+        delattr(parent, testMethod.__name__)
+        delattr(sys.modules[parent.__module__], parent.__name__)
 
         return property_provided_tests
     else:

@@ -3,6 +3,7 @@ from nose.proxy import ResultProxyFactory, ResultProxy
 from nose.loader import TestLoader
 from nose.suite import ContextSuiteFactory
 from nose.case import Test
+from nose.failure import Failure
 from unittest import suite
 
 from .dataprovider import Dataprovider
@@ -69,10 +70,11 @@ class TestLoader(TestLoader):
         if not test_case_names and hasattr(testCaseClass, 'runTest'):
             test_case_names = ['runTest']
 
-        if test_case_names:
-            return self._makeTest(test_case_names, testCaseClass)
+        result = self._makeTest(test_case_names, testCaseClass)
+        if isinstance(result, Failure):
+            return self.suiteClass(map(testCaseClass, test_case_names))
         else:
-            return super(TestLoader, self).loadTestsFromTestCase(testCaseClass)
+            return result
 
 
 class LodeTestResult(TextTestResult):
@@ -122,4 +124,8 @@ def run(*args, **kwargs):
     kwargs['exit'] = False
     kwargs['addplugins'] = plugins()
     kwargs['testLoader'] = TestLoader
-    return LodeProgram(*args, **kwargs).success
+    try:
+        argv = kwargs['argv']
+    except KeyError:
+        argv = ['run']
+    return LodeProgram(argv=argv, *args, **kwargs).success
