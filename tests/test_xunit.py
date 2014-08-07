@@ -36,7 +36,10 @@ class XunitTest(unittest.TestCase):
         self.x.configure(options, Config())
 
     def tearDown(self):
-        os.unlink(self.xmlfile)
+        try:
+            os.remove(self.xmlfile)
+        except OSError:
+            pass
 
     def test_with_unicode_string_in_output(self):
         a = "тест"

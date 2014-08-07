@@ -1,6 +1,15 @@
-from nose.plugins.xunit import Xunit, Tee
-from cStringIO import StringIO
 import sys
+import codecs
+import multiprocessing
+
+from cStringIO import StringIO
+
+from nose.plugins.xunit import Xunit, Tee
+
+
+MANAGER = multiprocessing.Manager()
+MP_ERRORLIST = MANAGER.list()
+MP_STATS = MANAGER.dict()
 
 
 class Tee(Tee):
@@ -14,6 +23,27 @@ class Tee(Tee):
 
 
 class Xunit(Xunit):
+    def configure(self, options, config):
+        """Configures the xunit plugin."""
+        super(Xunit, self).configure(options, config)
+        self.config = config
+        if self.enabled:
+            if hasattr(options, 'multiprocess_workers') and options.multiprocess_workers:
+                self.stats = MP_STATS
+                self.stats.update(
+                    {'errors': 0,
+                     'failures': 0,
+                     'passes': 0,
+                     'skipped': 0})
+                self.errorlist = MP_ERRORLIST
+            else:
+                super(Xunit, self).configure(options, config)
+            self.error_report_filename = options.xunit_file
+
+    def beforeTest(self, test):
+        """Initializes a timer before starting a test."""
+        self._startCapture()
+
     def _startCapture(self):
         self._capture_stack.append((sys.stdout, sys.stderr))
         self._currentStdout = StringIO()
@@ -34,3 +64,29 @@ class Xunit(Xunit):
             ev = ev.encode(self.encoding)
         err = (ec, ev, tb)
         super(Xunit, self).addFailure(test, err, capt, tb_info)
+
+    def report(self, stream):
+        """Writes an Xunit-formatted XML file
+
+        The file includes a report of test errors and failures.
+
+        """
+        self.error_report_file = codecs.open(self.error_report_filename, 'w',
+                                             self.encoding, 'replace')
+        self.stats['encoding'] = self.encoding
+        self.stats['total'] = (self.stats['errors'] + self.stats['failures']
+                               + self.stats['passes'] + self.stats['skipped'])
+        self.error_report_file.write(
+            u'<?xml version="1.0" encoding="%(encoding)s"?>'
+            u'<testsuite name="nosetests" tests="%(total)d" '
+            u'errors="%(errors)d" failures="%(failures)d" '
+            u'skip="%(skipped)d">' % self.stats)
+        self.error_report_file.write(u''.join([
+            self._forceUnicode(error) for error in self.errorlist
+        ]))
+
+        self.error_report_file.write(u'</testsuite>')
+        self.error_report_file.close()
+        if self.config.verbosity > 1:
+            stream.writeln("-" * 70)
+            stream.writeln("XML: %s" % self.error_report_file.name)
