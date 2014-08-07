@@ -95,6 +95,11 @@ class LodeRunner(TextTestRunner):
 
 class LodeProgram(TestProgram):
     def runTests(self):
+        from nose.plugins import multiprocess
+        multiprocess._instantiate_plugins = [
+            plugin.__class__ for plugin in plugins()
+        ]
+
         if self.testRunner is None:
             self.testRunner = LodeRunner(
                 stream=self.config.stream,
