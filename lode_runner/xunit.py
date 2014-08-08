@@ -1,6 +1,7 @@
 import sys
 import codecs
 import multiprocessing
+from time import time
 
 from cStringIO import StringIO
 
@@ -42,6 +43,7 @@ class Xunit(Xunit):
 
     def beforeTest(self, test):
         """Initializes a timer before starting a test."""
+        self._timer = time()
         self._startCapture()
 
     def _startCapture(self):
