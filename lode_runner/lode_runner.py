@@ -77,6 +77,14 @@ class TestLoader(TestLoader):
         else:
             return result
 
+    def loadTestsFromModule(self, module, path=None, discovered=False):
+        plugin_tests = []
+        for test in self.config.plugins.loadTestsFromModule(module, path=None, discovered=False):
+            plugin_tests.append(test)
+        if plugin_tests:
+            return plugin_tests
+        return super(TestLoader, self).loadTestsFromModule(module, path=None, discovered=False)
+
 
 class LodeTestResult(TextTestResult):
     pass
@@ -133,6 +141,7 @@ def run(*args, **kwargs):
     kwargs['testLoader'] = TestLoader
     try:
         argv = kwargs['argv']
+        del kwargs['argv']
     except KeyError:
         argv = ['run']
     return LodeProgram(argv=argv, *args, **kwargs).success
