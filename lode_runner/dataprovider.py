@@ -5,6 +5,7 @@ import copy
 import collections
 import re
 import sys
+import unittest
 
 from nose.plugins import Plugin
 log = logging.getLogger('nose.plugins.dataprovider')
@@ -30,14 +31,57 @@ class CustomString(object):
 class Dataprovider(Plugin):
     name = 'dataprovider'
 
-    def options(self, parser, env=os.environ):
-        super(Dataprovider, self).options(parser, env=env)
+    def options(self, parser, env):
+        """Sets additional command line options."""
+        Plugin.options(self, parser, env)
+        parser.add_option('--dataproviders-first', action="store_true",
+                          default=env.get('DATAPROVIDERS_FIRST', False),
+                          dest="dataproviders_first",
+                          help="If set, will call dataproviders, "
+                               "when before finding tests."
+                               "[DATAPROVIDERS_FIRST]")
 
     def configure(self, options, conf):
         super(Dataprovider, self).configure(options, conf)
+        f = bool(options.dataproviders_first)
+        conf.dataproviders_first = f
         self.enabled = True
         if not self.enabled:
             return
+
+    def _build_dataprovided_tests_in_module(self, module):
+        if not self.conf.dataproviders_first:
+            return
+
+        _is_test = re.compile(self.conf.testMatchPat)
+        for name, obj in inspect.getmembers(module):
+            if isinstance(obj, type):
+                if not unittest.TestCase in obj.__bases__:
+                    continue
+
+                test_case = obj
+                methods = [method for method in dir(test_case) if
+                           hasattr(getattr(test_case, method), "__call__")
+                           and not method.startswith("_")]
+                methods = [method for method in methods if _is_test.match(method)]
+                tests = [method for method in methods if
+                         hasattr(getattr(test_case(method), test_case(method)._testMethodName), '__func__')]
+
+                if tests:
+                    self.makeTest(tests, test_case)
+
+    def loadTestsFromName(self, name, module=None, discovered=False):
+        """ Overrided to call dataproviders
+        """
+        if module is None:
+            return None
+
+        self._build_dataprovided_tests_in_module(module)
+        return None
+
+    def loadTestsFromModule(self, module, path=None, discovered=False):
+        self._build_dataprovided_tests_in_module(module)
+        return None
 
     def makeTest(self, obj, parent):
         tests = []
@@ -50,7 +94,6 @@ class Dataprovider(Plugin):
         while tests:
             test = tests.pop(0)
             _test = _make_property_provided_tests(test)
-            # _test = _make_dataprovided_tests(test)
             if _test == [test]:
                 _tests += _test
             else:
@@ -61,7 +104,6 @@ class Dataprovider(Plugin):
         _tests = []
         for test in tests:
             _tests += _make_dataprovided_tests(test)
-            # _tests += _make_property_provided_tests(test)
 
         tests = _tests
         if len(tests) > 0:
@@ -138,8 +180,6 @@ def _make_property_provided_tests(test):
                 setattr(sys.modules[new_parent.__module__], new_parent_name, new_parent)
 
             name = testMethod.__name__ + "_" + _data_set_safe_name(data_set)
-            # print name
-            # print new_parent.__dict__
             setattr(new_parent, property_name, data_set)
 
             new_test_func = _make_func(testMethod, name)
