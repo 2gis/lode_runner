@@ -136,7 +136,9 @@ def _convert(data):
 def _data_set_safe_name(data_set):
     if hasattr(data_set, "__iter__"):
         data_set = _convert(data_set)
-    return _to_str(data_set)
+    result = _to_str(data_set)
+    result = result.replace("/", "<slash>").replace("\\", "<backslash>").replace(".", "<dot>").replace(":", "<colon>")
+    return result
 
 
 def _make_dataprovided_tests(test):
@@ -148,8 +150,9 @@ def _make_dataprovided_tests(test):
         _data = _prepare_data(data, test)
 
         dataprovided_tests = []
-        for data_set in _data:
+        for i, data_set in enumerate(_data):
             safe_name = _data_set_safe_name(data_set)
+            # name = testMethod.__name__ + "_" + str(i)
             name = testMethod.__name__ + "_" + safe_name
             new_test_func = _make_func(testMethod, name, data_set)
             setattr(parent, new_test_func.__name__, new_test_func)

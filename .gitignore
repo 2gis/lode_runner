@@ -1,1 +1,5 @@
 *.pyc
+.idea
+.noseids
+lode_runner.egg-info/
+nosetests.xml

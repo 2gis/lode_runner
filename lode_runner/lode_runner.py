@@ -12,6 +12,7 @@ from .contesto_plugin import ContestoPlugin
 from .json_reporter import LodeJsonReporter
 from .priority import AttributeSelector
 from .multiprocess import MultiProcess
+from .testid import TestId
 
 
 class ContextSuiteFactory(ContextSuiteFactory):
@@ -105,7 +106,7 @@ class LodeProgram(TestProgram):
     def runTests(self):
         from nose.plugins import multiprocess
         multiprocess._instantiate_plugins = [
-            plugin.__class__ for plugin in plugins()
+            plugin.__class__ for plugin in self.config.plugins
         ]
 
         if self.testRunner is None:
@@ -125,7 +126,8 @@ def plugins():
         ContestoPlugin(),
         LodeJsonReporter(),
         AttributeSelector(),
-        MultiProcess()
+        MultiProcess(),
+        TestId()
     ]
 
 
