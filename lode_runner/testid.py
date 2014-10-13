@@ -162,3 +162,5 @@ def parse_test_name(test):
         test_class, test_name = class_and_name, None
 
     return test_file, test_class, test_name
+# do not collect
+parse_test_name.__test__ = False

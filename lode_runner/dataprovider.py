@@ -56,7 +56,7 @@ class Dataprovider(Plugin):
         _is_test = re.compile(self.conf.testMatchPat)
         for name, obj in inspect.getmembers(module):
             if isinstance(obj, type):
-                if not unittest.TestCase in obj.__bases__:
+                if not has_parent(obj, unittest.TestCase):
                     continue
 
                 test_case = obj
@@ -108,6 +108,16 @@ class Dataprovider(Plugin):
         tests = _tests
         if len(tests) > 0:
             return tests
+
+
+def has_parent(obj, parent):
+    if parent in obj.__bases__:
+        return True
+
+    for base in obj.__bases__:
+        return has_parent(base, parent)
+
+    return False
 
 
 def _to_str(value, custom=False):
