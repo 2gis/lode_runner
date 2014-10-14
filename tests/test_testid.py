@@ -20,6 +20,8 @@ class TestIdTest(unittest.TestCase):
             os.path.join(os.path.dirname(__file__), self.idfile_location))
         parser = optparse.OptionParser()
         argv = [
+            # 0 is always program
+            "lode_runner",
             "--failed",
             "--with-id",
             "--id-file=%s" % self.idfile
