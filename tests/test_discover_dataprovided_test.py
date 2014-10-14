@@ -4,11 +4,11 @@ import sys
 from cStringIO import StringIO
 
 from lode_runner import run
-from lode_runner.lode_runner import LodeRunner
+from lode_runner.lode_runner import LodeRunner, TestLoader, LodeTestResult, Dataprovider
+
 from nose.config import Config
 from nose.plugins import PluginManager
-
-from lode_runner.lode_runner import TestLoader, LodeTestResult, Dataprovider
+from nose.failure import Failure
 
 
 class DiscoverTest(unittest.TestCase):
@@ -76,18 +76,14 @@ class DiscoverWithoutDataprovidersFirstTest(DiscoverTest):
         self.assertTrue(result.wasSuccessful())
 
     def test_fail_discover_dataprovided_test_by_name(self):
-        traceback = \
-            "Traceback (most recent call last):\n" \
-            "  File \"/usr/local/lib/python2.7/dist-packages/nose/failure.py\", line 41, in runTest\n" \
-            "    raise self.exc_class(self.exc_val)\n" \
-            "ValueError: No such test TestCase.test_with_dataprovider_fixture_2\n"
-
         stream = StringIO()
         tests = TestLoader(config=self.config).loadTestsFromName(self.tests_location + self.tested_test)
         result = LodeTestResult(stream, None, 0)
         tests.run(result)
 
         self.assertEqual(1, result.testsRun)
-        tb = result.errors[0][1]
-        self.assertEqual(traceback, tb)
+        self.assertEqual(1, len(result.errors))
+        failure = result.errors[0][0]
+        self.assertIsInstance(failure.test, Failure)
+        self.assertEqual("Failure: ValueError (No such test TestCase.test_with_dataprovider_fixture_2)", str(failure))
         self.assertFalse(result.wasSuccessful())
