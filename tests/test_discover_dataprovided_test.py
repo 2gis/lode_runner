@@ -4,7 +4,8 @@ import sys
 from cStringIO import StringIO
 
 from lode_runner import run
-from lode_runner.lode_runner import LodeRunner, TestLoader, LodeTestResult, Dataprovider
+from lode_runner.dataprovider import Dataprovider
+from lode_runner.lode_runner import TestLoader, LodeTestResult, LodeRunner
 
 from nose.config import Config
 from nose.plugins import PluginManager

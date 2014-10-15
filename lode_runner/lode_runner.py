@@ -1,3 +1,5 @@
+from multiprocessing import freeze_support
+
 from nose.core import TextTestResult, TextTestRunner, TestProgram
 from nose.proxy import ResultProxyFactory, ResultProxy
 from nose.loader import TestLoader
@@ -5,14 +7,6 @@ from nose.suite import ContextSuiteFactory
 from nose.case import Test
 from nose.failure import Failure
 from unittest import suite
-
-from .dataprovider import Dataprovider
-from .xunit import Xunit
-from .contesto_plugin import ContestoPlugin
-from .json_reporter import LodeJsonReporter
-from .priority import AttributeSelector
-from .multiprocess import MultiProcess
-from .testid import TestId
 
 
 class ContextSuiteFactory(ContextSuiteFactory):
@@ -120,6 +114,14 @@ class LodeProgram(TestProgram):
 
 # must return always new set of plugins
 def plugins():
+    from .dataprovider import Dataprovider
+    from .xunit import Xunit
+    from .contesto_plugin import ContestoPlugin
+    from .json_reporter import LodeJsonReporter
+    from .priority import AttributeSelector
+    from .multiprocess import MultiProcess
+    from .testid import TestId
+
     return [
         Dataprovider(),
         Xunit(),
@@ -147,3 +149,7 @@ def run(*args, **kwargs):
     except KeyError:
         argv = ['run']
     return LodeProgram(argv=argv, *args, **kwargs).success
+
+
+if __name__ == "__main__":
+    freeze_support()
