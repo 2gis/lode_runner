@@ -3,7 +3,7 @@ import codecs
 import multiprocessing
 from time import time
 
-from cStringIO import StringIO
+from StringIO import StringIO
 
 from nose.plugins.xunit import Xunit, Tee
 
