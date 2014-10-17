@@ -7,8 +7,9 @@ from cStringIO import StringIO
 from nose.config import Config
 from nose.plugins import PluginManager
 
-from lode_runner.testid import parse_test_name
-from lode_runner.lode_runner import TestLoader, LodeTestResult, Dataprovider, TestId
+from lode_runner.testid import parse_test_name, TestId
+from lode_runner.dataprovider import Dataprovider
+from lode_runner.lode_runner import TestLoader, LodeTestResult
 
 
 class TestIdTest(unittest.TestCase):

@@ -1,9 +1,16 @@
 # coding: utf-8
 
 import unittest
+import signal
+import pickle
+import time
+
+from nose.pyversion import bytes_
+from nose.suite import ContextSuite
 
 from nose.plugins.multiprocess import MultiProcessTestRunner, MultiProcess
-from nose.suite import ContextSuite
+
+_instantiate_plugins = None
 
 
 class MultiProcess(MultiProcess):
@@ -82,3 +89,60 @@ class MultiProcessTestRunner(MultiProcessTestRunner):
             for case in test:
                 for batch in self.nextBatch(case):
                     yield batch
+
+    def startProcess(self, iworker, testQueue, resultQueue, shouldStop, result):
+        from nose.plugins.multiprocess import Value, Event, Process
+        from nose.plugins.multiprocess import signalhandler
+
+        currentaddr = Value('c', bytes_(''))
+        currentstart = Value('d', time.time())
+        keyboardCaught = Event()
+        p = Process(target=runner,
+                    args=(
+                        iworker, testQueue,
+                        resultQueue,
+                        currentaddr,
+                        currentstart,
+                        keyboardCaught,
+                        shouldStop,
+                        self.loaderClass,
+                        result.__class__,
+                        pickle.dumps(self.config),
+                        _instantiate_plugins))
+        p.currentaddr = currentaddr
+        p.currentstart = currentstart
+        p.keyboardCaught = keyboardCaught
+        old = signal.signal(signal.SIGILL, signalhandler)
+        p.start()
+        signal.signal(signal.SIGILL, old)
+        return p
+
+    # def run(self, test):
+    #     from multiprocessing import Manager
+    #     self.modules = Manager().dict(sys.modules)
+    #     return super(MultiProcessTestRunner, self).run(test)
+
+
+def runner(ix, testQueue, resultQueue, currentaddr, currentstart,
+           keyboardCaught, shouldStop, loaderClass, resultClass, config, plugins):
+    from logging import getLogger
+    from Queue import Empty
+
+    log = getLogger(__name__)
+    try:
+        try:
+            return __runner(ix, testQueue, resultQueue, currentaddr, currentstart,
+                    keyboardCaught, shouldStop, loaderClass, resultClass, config, plugins)
+        except KeyboardInterrupt:
+            log.debug('Worker %s keyboard interrupt, stopping', ix)
+    except Empty:
+        log.debug("Worker %s timed out waiting for tasks", ix)
+
+
+def __runner(ix, testQueue, resultQueue, currentaddr, currentstart,
+           keyboardCaught, shouldStop, loaderClass, resultClass, config, plugins):
+    import nose.plugins.multiprocess as mp
+
+    mp._instantiate_plugins = plugins
+    mp.__runner(ix, testQueue, resultQueue, currentaddr, currentstart,
+           keyboardCaught, shouldStop, loaderClass, resultClass, config)

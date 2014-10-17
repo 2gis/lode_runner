@@ -160,7 +160,7 @@ def _make_dataprovided_tests(test):
         _data = _prepare_data(data, test)
 
         dataprovided_tests = []
-        for i, data_set in enumerate(_data):
+        for data_set in _data:
             safe_name = _data_set_safe_name(data_set)
             name = testMethod.__name__ + "_" + safe_name
             new_test_func = _make_func(testMethod, name, data_set)

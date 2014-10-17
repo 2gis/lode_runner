@@ -6,14 +6,6 @@ from nose.case import Test
 from nose.failure import Failure
 from unittest import suite
 
-from .dataprovider import Dataprovider
-from .xunit import Xunit
-from .contesto_plugin import ContestoPlugin
-from .json_reporter import LodeJsonReporter
-from .priority import AttributeSelector
-from .multiprocess import MultiProcess
-from .testid import TestId
-
 
 class ContextSuiteFactory(ContextSuiteFactory):
     def makeSuite(self, tests, context, **kw):
@@ -104,7 +96,7 @@ class LodeRunner(TextTestRunner):
 
 class LodeProgram(TestProgram):
     def runTests(self):
-        from nose.plugins import multiprocess
+        from . import multiprocess
         multiprocess._instantiate_plugins = [
             plugin.__class__ for plugin in self.config.plugins
         ]
@@ -120,6 +112,14 @@ class LodeProgram(TestProgram):
 
 # must return always new set of plugins
 def plugins():
+    from .dataprovider import Dataprovider
+    from .xunit import Xunit
+    from .contesto_plugin import ContestoPlugin
+    from .json_reporter import LodeJsonReporter
+    from .priority import AttributeSelector
+    from .multiprocess import MultiProcess
+    from .testid import TestId
+
     return [
         Dataprovider(),
         Xunit(),
