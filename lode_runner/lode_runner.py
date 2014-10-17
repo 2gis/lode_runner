@@ -1,5 +1,3 @@
-from multiprocessing import freeze_support
-
 from nose.core import TextTestResult, TextTestRunner, TestProgram
 from nose.proxy import ResultProxyFactory, ResultProxy
 from nose.loader import TestLoader
@@ -98,7 +96,7 @@ class LodeRunner(TextTestRunner):
 
 class LodeProgram(TestProgram):
     def runTests(self):
-        from nose.plugins import multiprocess
+        from . import multiprocess
         multiprocess._instantiate_plugins = [
             plugin.__class__ for plugin in self.config.plugins
         ]
@@ -149,7 +147,3 @@ def run(*args, **kwargs):
     except KeyError:
         argv = ['run']
     return LodeProgram(argv=argv, *args, **kwargs).success
-
-
-if __name__ == "__main__":
-    freeze_support()
