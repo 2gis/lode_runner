@@ -17,6 +17,7 @@ setup(
     entry_points={
         'console_scripts': [
             'lode_runner = lode_runner.lode_runner:main',
+            'lode_merge_xunit = lode_runner.lode_merge_xunit:main',
         ],
     },
 )
