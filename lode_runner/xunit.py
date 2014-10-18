@@ -1,7 +1,9 @@
+# coding: utf-8
+
 import sys
-import codecs
 import multiprocessing
 from time import time
+from xml.etree import ElementTree
 
 from StringIO import StringIO
 
@@ -73,21 +75,20 @@ class Xunit(Xunit):
         The file includes a report of test errors and failures.
 
         """
-        self.error_report_file = codecs.open(self.error_report_filename, 'w',
-                                             self.encoding, 'replace')
         self.stats['encoding'] = self.encoding
         self.stats['total'] = (self.stats['errors'] + self.stats['failures']
                                + self.stats['passes'] + self.stats['skipped'])
-        self.error_report_file.write(
-            u'<?xml version="1.0" encoding="%(encoding)s"?>'
-            u'<testsuite name="nosetests" tests="%(total)d" '
-            u'errors="%(errors)d" failures="%(failures)d" '
-            u'skip="%(skipped)d">' % self.stats)
-        self.error_report_file.write(u''.join([
-            self._forceUnicode(error) for error in self.errorlist
-        ]))
+        testsuite = ElementTree.Element("testsuite", attrib={
+            "name": "nosetests",
+            "tests": str(self.stats['total']),
+            "errors": str(self.stats['errors']),
+            "failures": str(self.stats['failures']),
+            "skip": str(self.stats['skipped']),
+        })
+        errors = [self._forceUnicode(error) for error in self.errorlist]
+        [testsuite.append(ElementTree.fromstring(error.encode("utf-8"))) for error in errors]
+        ElementTree.ElementTree(testsuite).write(self.error_report_filename, encoding="utf-8", xml_declaration=True)
 
-        self.error_report_file.write(u'</testsuite>')
         self.error_report_file.close()
         if self.config.verbosity > 1:
             stream.writeln("-" * 70)
