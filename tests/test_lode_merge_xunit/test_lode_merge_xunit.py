@@ -152,3 +152,13 @@ class LodeMergeXunitTest(unittest.TestCase):
         result_root = merge([success_report_root, skip_report_root])
         write_output(result_root, self.stream)
         self.assertEqual(skip_report, self.stream.getvalue())
+
+    def test_merge_overwrite_error_with_success(self):
+        success_report = self.get_success_report()
+        error_report = self.get_error_report()
+
+        success_report_root = ElementTree.fromstring(success_report)
+        error_report_root = ElementTree.fromstring(error_report)
+        result_root = merge([error_report_root, success_report_root])
+        write_output(result_root, self.stream)
+        self.assertEqual(success_report, self.stream.getvalue())
