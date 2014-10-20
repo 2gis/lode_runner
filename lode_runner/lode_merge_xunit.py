@@ -21,38 +21,27 @@ def merge(roots):
     def change_attribute_by(suite, attribute, value):
         suite.set(attribute, str(int(suite.get(attribute)) + value))
 
-    def delete_testcase(suite, testcase):
+    def modify_suite(suite, testcase, value):
         if len(testcase):
-            result = list(testcase)[0]
-            if result.tag == "failure":
-                change_attribute_by(suite, 'failures', -1)
-            elif result.tag == "error":
-                change_attribute_by(suite, 'errors', -1)
-            elif result.tag == "skipped":
-                change_attribute_by(suite, 'skip', -1)
-        change_attribute_by(suite, 'tests', -1)
-        suite.remove(testcase)
-
-    def add_testcase(suite, testcase):
-        if len(testcase):
-            result = list(testcase)[0]
-            if result.tag == "failure":
-                change_attribute_by(suite, 'failures', 1)
-            elif result.tag == "error":
-                change_attribute_by(suite, 'errors', 1)
-            elif result.tag == "skipped":
-                change_attribute_by(suite, 'skip', 1)
-        change_attribute_by(suite, 'tests', 1)
-        suite.append(testcase)
+            tags = [child.tag for child in list(testcase)]
+            if "failure" in tags:
+                change_attribute_by(suite, 'failures', value)
+            elif "error" in tags:
+                change_attribute_by(suite, 'errors', value)
+            elif "skipped" in tags:
+                change_attribute_by(suite, 'skip', value)
+        change_attribute_by(suite, 'tests', value)
 
     for suite in roots:
         for testcase in suite:
             candidates = base_root.findall(xpath % testcase.get('classname'))
             matching_testcase = next(t for t in candidates if t.get('name') == testcase.get('name'))
             if matching_testcase is not None:
-                delete_testcase(base_root, matching_testcase)
+                modify_suite(base_root, matching_testcase, -1)
+                base_root.remove(matching_testcase)
 
-            add_testcase(base_root, testcase)
+            modify_suite(base_root, testcase, 1)
+            base_root.append(testcase)
 
     return base_root
 
