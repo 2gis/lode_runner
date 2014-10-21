@@ -1,10 +1,11 @@
+from unittest import suite
+
 from nose.core import TextTestResult, TextTestRunner, TestProgram
 from nose.proxy import ResultProxyFactory, ResultProxy
 from nose.loader import TestLoader
 from nose.suite import ContextSuiteFactory
 from nose.case import Test
 from nose.failure import Failure
-from unittest import suite
 
 
 class ContextSuiteFactory(ContextSuiteFactory):
@@ -114,32 +115,32 @@ class LodeProgram(TestProgram):
 def plugins():
     from .dataprovider import Dataprovider
     from .xunit import Xunit
-    from .contesto_plugin import ContestoPlugin
-    from .json_reporter import LodeJsonReporter
     from .priority import AttributeSelector
     from .multiprocess import MultiProcess
     from .testid import TestId
 
-    return [
-        Dataprovider(),
-        Xunit(),
-        ContestoPlugin(),
-        LodeJsonReporter(),
-        AttributeSelector(),
-        MultiProcess(),
-        TestId()
+    plugs = [
+        Dataprovider, Xunit, AttributeSelector, MultiProcess, TestId
     ]
+
+    from nose.plugins import builtin
+    overwritten_names = [plug.__name__ for plug in plugs]
+    for plug in builtin.plugins:
+        if plug.__name__ not in overwritten_names:
+            plugs.append(plug)
+
+    return [plug() for plug in plugs]
 
 
 def main():
     LodeProgram(
-        addplugins=plugins(),
+        plugins=plugins(),
         testLoader=TestLoader)
 
 
 def run(*args, **kwargs):
     kwargs['exit'] = False
-    kwargs['addplugins'] = plugins()
+    kwargs['plugins'] = plugins()
     kwargs['testLoader'] = TestLoader
     try:
         argv = kwargs['argv']
