@@ -4,15 +4,18 @@ import sys
 import multiprocessing
 from time import time
 from xml.etree import ElementTree
-
 from StringIO import StringIO
 
 from nose.plugins.xunit import Xunit, Tee
+from nose.plugins.base import Plugin
 
 
 MANAGER = multiprocessing.Manager()
 MP_ERRORLIST = MANAGER.list()
-MP_STATS = MANAGER.dict()
+MP_STATS = MANAGER.dict({'errors': 0,
+                     'failures': 0,
+                     'passes': 0,
+                     'skipped': 0})
 
 
 class Tee(Tee):
@@ -28,20 +31,16 @@ class Tee(Tee):
 class Xunit(Xunit):
     def configure(self, options, config):
         """Configures the xunit plugin."""
-        super(Xunit, self).configure(options, config)
+        Plugin.configure(self, options, config)
         self.config = config
         if self.enabled:
             if hasattr(options, 'multiprocess_workers') and options.multiprocess_workers:
                 self.stats = MP_STATS
-                self.stats.update(
-                    {'errors': 0,
-                     'failures': 0,
-                     'passes': 0,
-                     'skipped': 0})
                 self.errorlist = MP_ERRORLIST
             else:
                 super(Xunit, self).configure(options, config)
-            self.error_report_filename = options.xunit_file
+
+        self.error_report_filename = options.xunit_file
 
     def beforeTest(self, test):
         """Initializes a timer before starting a test."""
@@ -89,7 +88,6 @@ class Xunit(Xunit):
         [testsuite.append(ElementTree.fromstring(error.encode("utf-8"))) for error in errors]
         ElementTree.ElementTree(testsuite).write(self.error_report_filename, encoding="utf-8", xml_declaration=True)
 
-        self.error_report_file.close()
         if self.config.verbosity > 1:
             stream.writeln("-" * 70)
-            stream.writeln("XML: %s" % self.error_report_file.name)
+            stream.writeln("XML: %s" % self.error_report_filename)
