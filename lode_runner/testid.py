@@ -20,11 +20,10 @@ SEEN = MANAGER.dict()
 FAILED = MANAGER.list()
 SOURCE_NAMES = MANAGER.list()
 TRANSLATED = MANAGER.list()
-COLLECTING = MANAGER.Value(bool, True)
 
 
 class TestId(TestId):
-    collecting = COLLECTING
+    collecting = True
 
     def configure(self, options, conf):
         """Configure plugin.
@@ -71,6 +70,7 @@ class TestId(TestId):
                 fh.close()
 
                 if self.loopOnFailed and len(failed):
+                    self.collecting = False
                     return failed
             except IOError:
                 pass
@@ -120,8 +120,7 @@ class TestId(TestId):
                 names = new_source
         else:
             # no new names to translate and add to id set
-            # self.collecting = False
-            pass
+            self.collecting = False
 
         return (None, translated + really_new + filtered or names)
 
