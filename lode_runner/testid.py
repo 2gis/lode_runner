@@ -18,7 +18,6 @@ IDS = MANAGER.dict()
 TESTS = MANAGER.dict()
 SEEN = MANAGER.dict()
 FAILED = MANAGER.list()
-FAILED_LOADED = MANAGER.list()
 SOURCE_NAMES = MANAGER.list()
 TRANSLATED = MANAGER.list()
 COLLECTING = MANAGER.Value(bool, True)
@@ -41,7 +40,6 @@ class TestId(TestId):
         self.ids = IDS
         self.tests = TESTS
         self.failed = FAILED
-        self.failed_loaded = FAILED_LOADED
         self.source_names = SOURCE_NAMES
         self.translated = TRANSLATED
         # used to track ids seen when tests is filled from
@@ -56,9 +54,10 @@ class TestId(TestId):
             try:
                 fh = open(self.idfile, 'rb')
                 data = load(fh)
+                failed = list()
                 if 'ids' in data:
                     self.ids.update(data['ids'])
-                    self.failed_loaded += data['failed']
+                    failed += data['failed']
                     self.source_names += data['source_names']
                 else:
                     # old ids field
@@ -71,12 +70,7 @@ class TestId(TestId):
                     self.id = 1
                 fh.close()
 
-                if self.loopOnFailed and len(self.failed_loaded):
-                    failed = []
-                    for name in list(self.failed_loaded):
-                        failed.append(name)
-
-                    del self.failed_loaded[:]
+                if self.loopOnFailed and len(failed):
                     return failed
             except IOError:
                 pass
