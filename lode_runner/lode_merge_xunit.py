@@ -45,16 +45,21 @@ def merge(roots):
 
     return base_root
 
+get_roots = lambda reports: [ElementTree.parse(r).getroot() for r in reports]
+
+
+def merge_reports(reports, output):
+    roots = get_roots(reports)
+    root = merge(roots)
+    write_output(root, output)
+
 
 def main():
     args = parser.parse_args()
     reports = args.input
     output = args.output
 
-    roots = [ElementTree.parse(r).getroot() for r in reports]
-    root = merge(roots)
-    write_output(root, output)
-
+    merge_reports(reports, output)
 
 if __name__ == "__main__":
     main()
