@@ -20,6 +20,7 @@ SEEN = MANAGER.dict()
 FAILED = MANAGER.list()
 SOURCE_NAMES = MANAGER.list()
 TRANSLATED = MANAGER.list()
+LOCK = MANAGER.Lock()
 
 
 class TestId(TestId):
@@ -123,6 +124,30 @@ class TestId(TestId):
             self.collecting = False
 
         return (None, translated + really_new + filtered or names)
+
+    def startTest(self, test):
+        """Maybe output an id # before the test name.
+
+        Example output::
+
+          #1 test.test ... ok
+          #2 test.test_two ... ok
+
+        """
+        adr = test.address()
+        if adr in self.tests:
+            if adr in self._seen:
+                self.write('   ')
+            else:
+                self.write('#%s ' % self.tests[adr])
+                self._seen[adr] = 1
+            return
+        with LOCK:
+            self.tests[adr] = len(self.tests)+1
+            self.id = len(self.tests)+1
+            # self.write(str(dict(self.tests)))
+            self.write('#%s ' % self.id)
+        # self.id += 1
 
     def finalize(self, result):
         """Save new ids file, if needed.
