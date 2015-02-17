@@ -21,10 +21,10 @@ tests_to_run = [
     "test_class_dataprovider_1",
     "test_class_dataprovider_2",
     "test_class_dataprovider_3",
-    "test_dict_dataprovider_{'two': u'второй тест', 'one': 'первый тест'}",
+    "test_dict_dataprovider_{'one': u'первый тест', 'two': u'второй тест'}",
     "test_list_dataprovider_['первый тест', u'второй тест']",
     "test_tuple_dataprovider_('первый тест', u'второй тест')",
-    "test_dict_dataprovider_{'one': 'первый тест', 'two': u'второй тест'}",
+    "test_namedtuple_dataprovider_({'one': u'первый тест', 'two': u'второй тест'})",
 ]
 
 
@@ -85,12 +85,12 @@ class NestedDataprovidersTest(unittest.TestCase):
         list_string = "['%s', u'%s']" % (data[0], data[1].encode('utf-8'))
         tests_to_run.remove("%s_%s" % ("test_list_dataprovider", list_string))
 
-    @dataprovider([{'one': 'первый тест', 'two': u'второй тест'}])
+    @dataprovider([{'one': u'первый тест', 'two': u'второй тест'}])
     def test_dict_dataprovider(self, data):
-        l = list(data.iteritems())
+        l = sorted(data.iteritems())
         key1, value1 = l[0]
         key2, value2 = l[1]
-        dict_string = "{'%s': u'%s', '%s': '%s'}" % (key1, value1.encode('utf-8'), key2, value2)
+        dict_string = "{'%s': u'%s', '%s': u'%s'}" % (key1, value1.encode("utf-8"), key2, value2.encode("utf-8"))
         test_name = "%s_%s" % ("test_dict_dataprovider", dict_string)
         tests_to_run.remove(test_name)
 
@@ -100,13 +100,13 @@ class NestedDataprovidersTest(unittest.TestCase):
         tests_to_run.remove("%s_%s" % ("test_tuple_dataprovider", tuple_string))
 
     TestNamedTuple = namedtuple('TestNamedTuple', 'one two')
-    @dataprovider([(TestNamedTuple('первый тест', u'второй тест'),)])
+    @dataprovider([(TestNamedTuple(u'первый тест', u'второй тест'),)])
     def test_namedtuple_dataprovider(self, data):
         l = list(data._asdict().iteritems())
         key1, value1 = l[0]
         key2, value2 = l[1]
-        dict_string = "{'%s': '%s', '%s': u'%s'}" % (key1, value1, key2, value2.encode('utf-8'))
-        test_name = "%s_%s" % ("test_dict_dataprovider", dict_string)
+        dict_string = "{'%s': u'%s', '%s': u'%s'}" % (key1, value1.encode('utf-8'), key2, value2.encode('utf-8'))
+        test_name = "%s_(%s)" % ("test_namedtuple_dataprovider", dict_string)
         tests_to_run.remove(test_name)
 
 
