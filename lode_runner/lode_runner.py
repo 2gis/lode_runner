@@ -118,9 +118,10 @@ def plugins():
     from .priority import AttributeSelector
     from .multiprocess import MultiProcess
     from .testid import TestId
+    from .initializer import Initializer
 
     plugs = [
-        Dataprovider, Xunit, AttributeSelector, MultiProcess, TestId
+        Dataprovider, Xunit, AttributeSelector, MultiProcess, TestId, Initializer
     ]
 
     from nose.plugins import builtin
