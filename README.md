@@ -4,5 +4,5 @@ lode_runner
 
 # install
 ```bash
-sudo -E pip install -U git+https://github.com/nwlunatic/lode_runner.git#egg=lode_runner
+pip install -U git+https://github.com/2gis/lode_runner.git#egg=lode_runner
 ```
