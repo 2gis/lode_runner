@@ -19,5 +19,13 @@ setup(
             'lode_runner = lode_runner.lode_runner:main',
             'lode_merge_xunit = lode_runner.lode_merge_xunit:main',
         ],
+        'nose.plugins.0.10': [
+            'dataprovider = lode_runner.dataprovider:Dataprovider',
+            'xunit = lode_runner.xunit:Xunit',
+            'priority = lode_runner.priority:AttributeSelector',
+            'multiprocess = lode_runner.multiprocess:MultiProcess',
+            'testid = lode_runner.testid:TestId',
+            'initializer = lode_runner.initializer:Initializer',
+        ]
     },
 )
