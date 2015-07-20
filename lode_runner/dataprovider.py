@@ -1,5 +1,4 @@
 import logging
-import os
 import inspect
 import copy
 import collections
@@ -7,6 +6,7 @@ import re
 import sys
 import unittest
 
+from nose.pyversion import ismethod
 from nose.plugins import Plugin
 log = logging.getLogger('nose.plugins.dataprovider')
 
@@ -43,51 +43,56 @@ class Dataprovider(Plugin):
 
     def configure(self, options, conf):
         super(Dataprovider, self).configure(options, conf)
-        f = bool(options.dataproviders_first)
-        conf.dataproviders_first = f
+        conf.dataproviders_first = bool(options.dataproviders_first)
         self.enabled = True
         if not self.enabled:
             return
+        self.is_test = re.compile(self.conf.testMatchPat)
 
-    def _build_dataprovided_tests_in_module(self, module):
+    def prepareTestLoader(self, test_loader):
+        self.importer = test_loader.importer
+
+    def beforeImport(self, filename, module_name):
+        try:
+            module = self.importer.importFromPath(
+                filename, module_name)
+        except:
+            module = None
+        if module:
+            self.loadTestsFromModule(module)
+
+    def loadTestsFromName(self, name, module=None, discovered=False):
+        if module is None:
+            return None
+
+        self.loadTestsFromModule(module)
+
+    def loadTestsFromModule(self, module, path=None, discovered=False):
         if not self.conf.dataproviders_first:
             return
 
-        _is_test = re.compile(self.conf.testMatchPat)
         for name, obj in inspect.getmembers(module):
             if isinstance(obj, type):
                 if not has_parent(obj, unittest.TestCase):
                     continue
 
-                test_case = obj
-                methods = [method for method in dir(test_case) if
-                           hasattr(getattr(test_case, method), "__call__")
-                           and not method.startswith("_")]
-                methods = [method for method in methods if _is_test.match(method)]
-                tests = [method for method in methods if
-                         hasattr(getattr(test_case(method), test_case(method)._testMethodName), '__func__')]
+                self.loadTestsFromTestCase(obj)
 
-                if tests:
-                    self.makeTest(tests, test_case)
+    def loadTestsFromTestCase(self, test_case):
+        methods = [method for method in dir(test_case) if
+                   hasattr(getattr(test_case, method), "__call__")
+                   and not method.startswith("_")]
+        methods = [method for method in methods if self.is_test.match(method)]
+        tests = [method for method in methods if
+                 hasattr(getattr(test_case(method),test_case(method)._testMethodName), '__func__')]
 
-    def loadTestsFromName(self, name, module=None, discovered=False):
-        """ Overrided to call dataproviders
-        """
-        if module is None:
-            return None
-
-        self._build_dataprovided_tests_in_module(module)
-        return None
-
-    def loadTestsFromModule(self, module, path=None, discovered=False):
-        self._build_dataprovided_tests_in_module(module)
-        return None
+        self.makeTest(tests, test_case)
 
     def makeTest(self, obj, parent):
         tests = []
         if isinstance(obj, list):
             tests = map(parent, obj)
-        elif inspect.ismethod(obj):
+        elif ismethod(obj):
             tests = [parent(obj.__name__)]
 
         _tests = []
@@ -147,7 +152,11 @@ def _data_set_safe_name(data_set):
     if hasattr(data_set, "__iter__"):
         data_set = _convert(data_set)
     result = _to_str(data_set)
-    result = result.replace("/", "<slash>").replace("\\", "<backslash>").replace(".", "<dot>").replace(":", "<colon>")
+    result = result.\
+        replace("/", "<slash>").\
+        replace("\\", "<backslash>").\
+        replace(".", "<dot>").\
+        replace(":", "<colon>")
     return result
 
 

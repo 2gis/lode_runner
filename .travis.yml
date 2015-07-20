@@ -4,4 +4,4 @@ python:
   - "pypy"
 install:
   - "python setup.py install"
-script: "PYTHONPATH=`pwd` lode_runner --processes=1 tests/"
+script: "PYTHONPATH=`pwd` nosetests --dataproviders-first --processes=1 tests/"
