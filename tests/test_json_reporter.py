@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 import unittest
-import os
 import optparse
 import sys
-import re
 import json
 
+import os
+import re
 from nose.config import Config
-
-from lode_runner.json_reporter import LodeJsonReporter
-from lode_runner.lode_runner import ContextSuiteFactory
-
+from lode_runner.plugins.json_reporter import LodeJsonReporter
+from lode_runner.core import ContextSuiteFactory
 
 time_taken = re.compile(r'\d\.\d\d')
 

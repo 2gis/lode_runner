@@ -2,8 +2,7 @@
 from collections import namedtuple
 import unittest
 
-from lode_runner.dataprovider import dataprovider
-
+from lode_runner.plugins.dataprovider import dataprovider
 
 tests_to_run = [
     "test_data_dataprovider_1",

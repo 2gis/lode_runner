@@ -19,4 +19,3 @@ class AttributeSelector(AttributeSelector):
             return None
 
         return result
-

@@ -97,7 +97,7 @@ class LodeRunner(TextTestRunner):
 
 class LodeProgram(TestProgram):
     def runTests(self):
-        from . import multiprocess
+        from lode_runner.plugins import multiprocess
         multiprocess._instantiate_plugins = [
             plugin.__class__ for plugin in self.config.plugins
         ]
@@ -113,15 +113,14 @@ class LodeProgram(TestProgram):
 
 # must return always new set of plugins
 def plugins():
-    from .dataprovider import Dataprovider
-    from .xunit import Xunit
-    from .priority import AttributeSelector
-    from .multiprocess import MultiProcess
-    from .testid import TestId
-    from .initializer import Initializer
+    from lode_runner.plugins.dataprovider import Dataprovider
+    from lode_runner.plugins.xunit import Xunit
+    from lode_runner.plugins.multiprocess import MultiProcess
+    from lode_runner.plugins.testid import TestId
+    from lode_runner.plugins.initializer import Initializer
 
     plugs = [
-        Dataprovider, Xunit, AttributeSelector, MultiProcess, TestId, Initializer
+        Dataprovider, Xunit, MultiProcess, TestId, Initializer
     ]
 
     from nose.plugins import builtin

@@ -1,9 +1,8 @@
 import unittest
 import optparse
 
-from lode_runner.priority import critical, AttributeSelector
-from lode_runner.lode_runner import TestLoader
-
+from lode_runner.plugins.priority import critical, AttributeSelector
+from lode_runner.core import TestLoader
 from nose.config import Config
 
 

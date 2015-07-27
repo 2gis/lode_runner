@@ -3,14 +3,13 @@
 import unittest
 from unittest.case import SkipTest
 import sys
-import os
 import optparse
 from xml.etree import ElementTree
 from StringIO import StringIO
 
+import os
 from nose.config import Config
-
-from lode_runner.xunit import Xunit
+from lode_runner.plugins.xunit import Xunit
 from lode_runner.lode_merge_xunit import merge, write_output
 
 

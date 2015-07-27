@@ -2,8 +2,7 @@
 
 import unittest
 
-from lode_runner.dataprovider import property_provider
-from lode_runner.dataprovider import dataprovider
+from lode_runner.plugins.dataprovider import dataprovider, property_provider
 
 
 tests_to_run = [

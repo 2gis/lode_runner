@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 import unittest
-import os
 import optparse
 import sys
-import re
 from xml.etree import ElementTree
 
+import os
+import re
 from nose.config import Config
-
-from lode_runner.xunit import Xunit
-
+from lode_runner.plugins.xunit import Xunit
 
 time_taken = re.compile(r'\d\.\d\d')
 

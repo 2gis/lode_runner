@@ -17,16 +17,15 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'lode_runner = lode_runner.lode_runner:main',
+            'lode_runner = lode_runner.runner:main',
             'lode_merge_xunit = lode_runner.lode_merge_xunit:main',
         ],
         'nose.plugins.0.10': [
-            'dataprovider = lode_runner.dataprovider:Dataprovider',
-            'xunit = lode_runner.xunit:Xunit',
-            'priority = lode_runner.priority:AttributeSelector',
-            'multiprocess = lode_runner.multiprocess:MultiProcess',
-            'testid = lode_runner.testid:TestId',
-            'initializer = lode_runner.initializer:Initializer',
+            'dataprovider = lode_runner.plugins.dataprovider:Dataprovider',
+            'xunit = lode_runner.plugins.xunit:Xunit',
+            'multiprocess = lode_runner.plugins.multiprocess:MultiProcess',
+            'testid = lode_runner.plugins.testid:TestId',
+            'initializer = lode_runner.plugins.initializer:Initializer',
         ]
     },
 )

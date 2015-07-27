@@ -4,7 +4,7 @@ import unittest
 from cStringIO import StringIO
 
 from lode_runner import run
-from lode_runner.lode_runner import LodeRunner
+from lode_runner.core import LodeRunner
 from nose.config import Config
 from nose.plugins.manager import DefaultPluginManager
 
