@@ -1,14 +1,23 @@
 import logging
 import inspect
+import types
 import copy
 import collections
 import re
 import sys
 import unittest
 
-from nose.pyversion import ismethod
+from nose.pyversion import ismethod, unbound_method
 from nose.plugins import Plugin
+
 log = logging.getLogger('nose.plugins.dataprovider')
+
+if sys.version_info[:2] < (3, 0):
+    def isstring(s):
+        return isinstance(s, basestring)
+else:
+    def isstring(s):
+        return isinstance(s, str)
 
 
 class CustomString(object):
@@ -84,14 +93,19 @@ class Dataprovider(Plugin):
                    and not method.startswith("_")]
         methods = [method for method in methods if self.is_test.match(method)]
         tests = [method for method in methods if
-                 hasattr(getattr(test_case(method),test_case(method)._testMethodName), '__func__')]
+                 hasattr(getattr(test_case(method), test_case(method)._testMethodName), '__func__')]
 
         self.makeTest(tests, test_case)
 
     def makeTest(self, obj, parent):
+        if inspect.isfunction(obj) and parent and not isinstance(parent, types.ModuleType):
+            # This is a Python 3.x 'unbound method'.  Wrap it with its
+            #  associated class..
+            obj = unbound_method(parent, obj)
+
         tests = []
         if isinstance(obj, list):
-            tests = map(parent, obj)
+            tests = list(map(parent, obj))
         elif ismethod(obj):
             tests = [parent(obj.__name__)]
 
@@ -136,12 +150,14 @@ def _to_str(value, custom=False):
 
 
 def _convert(data):
-    if isinstance(data, basestring):
+    if isstring(data):
         return _to_str(data, True)
     elif isinstance(data, tuple) and hasattr(data, '_asdict'):  # Handle namedtuple
-        return dict(map(_convert, data._asdict().iteritems()))
+        items = iter(data._asdict().items())
+        return dict(map(_convert, items))
     elif isinstance(data, collections.Mapping):
-        return dict(map(_convert, data.iteritems()))
+        items = iter(data.items())
+        return dict(map(_convert, items))
     elif isinstance(data, collections.Iterable):
         return type(data)(map(_convert, data))
     else:
@@ -152,10 +168,10 @@ def _data_set_safe_name(data_set):
     if hasattr(data_set, "__iter__"):
         data_set = _convert(data_set)
     result = _to_str(data_set)
-    result = result.\
-        replace("/", "<slash>").\
-        replace("\\", "<backslash>").\
-        replace(".", "<dot>").\
+    result = result. \
+        replace("/", "<slash>"). \
+        replace("\\", "<backslash>"). \
+        replace(".", "<dot>"). \
         replace(":", "<colon>")
     return result
 
@@ -229,7 +245,7 @@ def _make_data(data):
 
 def _make_func(func, name, data_set=None):
     if data_set and not isinstance(data_set, tuple):
-        data_set = (data_set, )
+        data_set = (data_set,)
 
     if data_set:
         standalone_func = lambda *args: func(*(args + data_set))
@@ -261,9 +277,12 @@ def dataprovider(data):
         if inspect.isclass(func):
             for method_name, method in inspect.getmembers(func, predicate=inspect.ismethod):
                 method.__func__._data_provided = data
+            for method_name, method in inspect.getmembers(func, predicate=inspect.isfunction):
+                method._data_provided = data
         else:
             func._data_provided = data
         return func
+
     return wrapper
 
 
@@ -279,7 +298,10 @@ def property_provider(property_name, data):
         if inspect.isclass(func):
             for method_name, method in inspect.getmembers(func, predicate=inspect.ismethod):
                 _add_property(method.__func__, property_name, data)
+            for method_name, method in inspect.getmembers(func, predicate=inspect.isfunction):
+                _add_property(method, property_name, data)
         else:
             _add_property(func, property_name, data)
         return func
+
     return wrapper

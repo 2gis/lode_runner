@@ -1,6 +1,4 @@
-from test_action import TestAction
-from lode_runner import run
-from dataprovider import dataprovider, property_provider
+from lode_runner.core import run
+from lode_runner.plugins.dataprovider import dataprovider, property_provider
 
-__all__ = ['TestAction', 'run', 'dataprovider', 'property_provider']
-
+__all__ = ['run', 'dataprovider', 'property_provider']

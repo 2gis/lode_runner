@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from cStringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from lode_runner import run
-from lode_runner.lode_runner import LodeRunner
+from lode_runner.core import LodeRunner
 from nose.config import Config
 from nose.plugins.manager import DefaultPluginManager
 

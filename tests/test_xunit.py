@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 import unittest
-import os
 import optparse
 import sys
-import re
 from xml.etree import ElementTree
 
+import os
+import re
 from nose.config import Config
-
-from lode_runner.xunit import Xunit
-
+from lode_runner.plugins.xunit import Xunit
 
 time_taken = re.compile(r'\d\.\d\d')
 
@@ -44,7 +42,7 @@ class XunitTest(unittest.TestCase):
     def test_with_unicode_string_in_output(self):
         a = "тест"
         b = u'тест'
-        print a, b
+        print(a, b)
         self.assertTrue(True)
 
     def get_xml_report(self):
@@ -59,15 +57,14 @@ class XunitTest(unittest.TestCase):
     def test_addFailure(self):
         test = mktest()
         self.x.beforeTest(test)
-        str = u"%s is not 'equal' to %s" % (u'Тест', u'тест')
+        message = u"%s is not 'equal' to %s" % (u'Тест', u'тест')
         try:
-            raise AssertionError(str)
+            raise AssertionError(message)
         except AssertionError:
             some_err = sys.exc_info()
 
         ec, ev, tb = some_err
-        ev = unicode(ev)
-        some_err = (ec, ev, tb)
+        some_err = (ec, ev.args[0], tb)
 
         self.x.addFailure(test, some_err)
 
@@ -89,21 +86,21 @@ class XunitTest(unittest.TestCase):
         err = tc.find("failure")
         self.assertEqual(err.attrib['type'], "%s.AssertionError" % (AssertionError.__module__,))
         err_lines = err.text.strip().split("\n")
-        self.assertEqual(err_lines[-1], str)
-        self.assertEqual(err_lines[-2], '    raise AssertionError(str)')
+        self.assertEqual(err_lines[-1], message)
+        self.assertEqual(err_lines[-2], '    raise AssertionError(message)')
 
     def test_addError(self):
         test = mktest()
         self.x.beforeTest(test)
-        str = "some error happened"
+        message = 'some error happened'
         try:
-            raise RuntimeError(str)
+            raise RuntimeError(message)
         except RuntimeError:
             some_err = sys.exc_info()
 
         ec, ev, tb = some_err
-        ev = unicode(ev)
-        some_err = (ec, ev, tb)
+        # ev = str(ev)
+        some_err = (ec, ev.args[0], tb)
 
         self.x.addError(test, some_err)
 
@@ -125,5 +122,5 @@ class XunitTest(unittest.TestCase):
         err = tc.find("error")
         self.assertEqual(err.attrib['type'], "%s.RuntimeError" % (RuntimeError.__module__,))
         err_lines = err.text.strip().split("\n")
-        self.assertEqual(err_lines[-1], str)
-        self.assertEqual(err_lines[-2], '    raise RuntimeError(str)')
+        self.assertIn(message, err_lines[-1])
+        self.assertEqual(err_lines[-2], '    raise RuntimeError(message)')

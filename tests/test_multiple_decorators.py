@@ -1,6 +1,7 @@
 import unittest
+
 from nose.plugins.attrib import attr
-from lode_runner.dataprovider import dataprovider
+from lode_runner.plugins.dataprovider import dataprovider
 
 tests_to_run = set([
     "test_multiple_decorators_slow_1",

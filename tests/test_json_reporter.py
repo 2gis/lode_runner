@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 import unittest
-import os
 import optparse
 import sys
-import re
 import json
 
+import os
+import re
 from nose.config import Config
-
-from lode_runner.json_reporter import LodeJsonReporter
-from lode_runner.lode_runner import ContextSuiteFactory
-
+from lode_runner.plugins.json_reporter import LodeJsonReporter
+from lode_runner.core import ContextSuiteFactory
 
 time_taken = re.compile(r'\d\.\d\d')
 
@@ -44,14 +42,14 @@ class JsonReporterTest(unittest.TestCase):
     def test_with_unicode_string_in_output(self):
         a = "тест"
         b = u'тест'
-        print a, b
+        print(a, b)
         self.assertTrue(True)
 
     def get_json_report(self):
         class DummyStream:
             pass
         self.x.report(DummyStream())
-        f = open(self.reportfile, 'rb')
+        f = open(self.reportfile, 'r')
         data = f.read()
         f.close()
         return data
@@ -59,15 +57,14 @@ class JsonReporterTest(unittest.TestCase):
     def test_addFailure(self):
         test = mktest()
         self.x.beforeTest(test)
-        str = u"%s is not 'equal' to %s" % (u'Тест', u'тест')
+        message = u"%s is not 'equal' to %s" % (u'Тест', u'тест')
         try:
-            raise AssertionError(str)
+            raise AssertionError(message)
         except AssertionError:
             some_err = sys.exc_info()
 
         ec, ev, tb = some_err
-        ev = unicode(ev)
-        some_err = (ec, ev, tb)
+        some_err = (ec, ev.args[0], tb)
 
         self.x.addFailure(test, some_err)
 
@@ -93,28 +90,27 @@ class JsonReporterTest(unittest.TestCase):
         }
 
         self.assertDictContainsSubset(tc_report, tc)
-        self.assertTrue(time_taken.match(unicode(tc['time'])),
+        self.assertTrue(time_taken.match(str(tc['time'])),
                         'Expected decimal time: %s' % tc['time'])
 
         err = tc['error']
         self.assertEqual(err['type'], "%s.AssertionError" % (AssertionError.__module__,))
 
         err_lines = err['tb'].strip().split("\n")
-        self.assertEqual(err_lines[-1], str)
-        self.assertEqual(err_lines[-2], '    raise AssertionError(str)')
+        self.assertEqual(err_lines[-1], message)
+        self.assertEqual(err_lines[-2], '    raise AssertionError(message)')
 
     def test_addError(self):
         test = mktest()
         self.x.beforeTest(test)
-        str = "some error happened"
+        message = "some error happened"
         try:
-            raise RuntimeError(str)
+            raise RuntimeError(message)
         except RuntimeError:
             some_err = sys.exc_info()
 
         ec, ev, tb = some_err
-        ev = unicode(ev)
-        some_err = (ec, ev, tb)
+        some_err = (ec, ev.args[0], tb)
 
         self.x.addError(test, some_err)
 
@@ -141,14 +137,14 @@ class JsonReporterTest(unittest.TestCase):
         }
         self.assertDictContainsSubset(tc_report, tc)
         self.assertEqual(tc['classname'], "test_json_reporter.TestCase")
-        self.assertTrue(time_taken.match(unicode(tc['time'])),
+        self.assertTrue(time_taken.match(str(tc['time'])),
                         'Expected decimal time: %s' % tc['time'])
 
         err = tc['error']
         self.assertEqual(err['type'], "%s.RuntimeError" % (RuntimeError.__module__,))
         err_lines = err['tb'].strip().split("\n")
-        self.assertEqual(err_lines[-1], str)
-        self.assertEqual(err_lines[-2], '    raise RuntimeError(str)')
+        self.assertIn(message, err_lines[-1])
+        self.assertEqual(err_lines[-2], '    raise RuntimeError(message)')
 
     def test_addSuccess(self):
         test = mktest()
@@ -177,7 +173,7 @@ class JsonReporterTest(unittest.TestCase):
             u'priority': u'unknown'
         }
         self.assertDictContainsSubset(tc_report, tc)
-        self.assertTrue(time_taken.match(unicode(tc['time'])),
+        self.assertTrue(time_taken.match(str(tc['time'])),
                         'Expected decimal time: %s' % tc['time'])
 
         self.assertTrue(not tc.get('error'))

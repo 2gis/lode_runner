@@ -1,7 +1,8 @@
 # coding: utf-8
 
 import unittest
-from lode_runner.dataprovider import dataprovider
+
+from lode_runner.plugins.dataprovider import dataprovider
 
 
 class TestCase(unittest.TestCase):

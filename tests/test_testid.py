@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 import unittest
-import os
 import optparse
-from cStringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
+import os
 from nose.config import Config
 from nose.plugins import PluginManager
-
-from lode_runner.testid import parse_test_name, TestId
-from lode_runner.dataprovider import Dataprovider
-from lode_runner.lode_runner import TestLoader, LodeTestResult
+from lode_runner.plugins.testid import parse_test_name, TestId
+from lode_runner.plugins.dataprovider import Dataprovider
+from lode_runner.core import TestLoader, LodeTestResult
 
 
 class TestIdTest(unittest.TestCase):

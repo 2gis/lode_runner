@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 setup(
     name='lode_runner',
     url='https://github.com/2gis/lode_runner',
-    version='0.1',
+    version='0.2',
     description='Nosetests runner plugins package',
     long_description='',
     author='Igor Pavlov',
@@ -12,21 +12,20 @@ setup(
     zip_safe=False,
     packages=find_packages(),
     install_requires=[
-        "nose == 1.3.0",
+        "nose == 1.3.7",
         "nose-testconfig",
     ],
     entry_points={
         'console_scripts': [
-            'lode_runner = lode_runner.lode_runner:main',
+            'lode_runner = lode_runner.runner:main',
             'lode_merge_xunit = lode_runner.lode_merge_xunit:main',
         ],
         'nose.plugins.0.10': [
-            'dataprovider = lode_runner.dataprovider:Dataprovider',
-            'xunit = lode_runner.xunit:Xunit',
-            'priority = lode_runner.priority:AttributeSelector',
-            'multiprocess = lode_runner.multiprocess:MultiProcess',
-            'testid = lode_runner.testid:TestId',
-            'initializer = lode_runner.initializer:Initializer',
+            'dataprovider = lode_runner.plugins.dataprovider:Dataprovider',
+            'xunit = lode_runner.plugins.xunit:Xunit',
+            'multiprocess = lode_runner.plugins.multiprocess:MultiProcess',
+            'testid = lode_runner.plugins.testid:TestId',
+            'initializer = lode_runner.plugins.initializer:Initializer',
         ]
     },
 )

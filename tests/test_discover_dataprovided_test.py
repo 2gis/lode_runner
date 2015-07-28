@@ -1,12 +1,14 @@
 # coding: utf-8
 import unittest
 import sys
-from cStringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from lode_runner import run
-from lode_runner.dataprovider import Dataprovider
-from lode_runner.lode_runner import TestLoader, LodeTestResult, LodeRunner
-
+from lode_runner.plugins.dataprovider import Dataprovider
+from lode_runner.core import TestLoader, LodeTestResult, LodeRunner
 from nose.config import Config
 from nose.plugins import PluginManager
 from nose.failure import Failure

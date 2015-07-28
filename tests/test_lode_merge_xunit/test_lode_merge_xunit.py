@@ -3,14 +3,16 @@
 import unittest
 from unittest.case import SkipTest
 import sys
-import os
 import optparse
 from xml.etree import ElementTree
-from StringIO import StringIO
+try:
+    from io import BytesIO
+except ImportError:
+    from io import BytesIO
 
+import os
 from nose.config import Config
-
-from lode_runner.xunit import Xunit
+from lode_runner.plugins.xunit import Xunit
 from lode_runner.lode_merge_xunit import merge, write_output
 
 
@@ -26,7 +28,7 @@ class LodeMergeXunitTest(unittest.TestCase):
     def setUp(self):
         self.xmlfile = os.path.abspath(
             os.path.join(os.path.dirname(__file__), 'xunit.xml'))
-        self.stream = StringIO()
+        self.stream = BytesIO()
 
     def setup_xunit(self):
         parser = optparse.OptionParser()
@@ -65,15 +67,14 @@ class LodeMergeXunitTest(unittest.TestCase):
     def get_failure_report(self):
         x = self.setup_xunit()
         test = mktest()
-        str = u"%s is not 'equal' to %s" % (u'Тест', u'тест')
+        message = u"%s is not 'equal' to %s" % (u'Тест', u'тест')
         try:
-            raise AssertionError(str)
+            raise AssertionError(message)
         except AssertionError:
             some_err = sys.exc_info()
 
         ec, ev, tb = some_err
-        ev = unicode(ev)
-        some_err = (ec, ev, tb)
+        some_err = (ec, ev.args[0], tb)
 
         x.beforeTest(test)
         x.addFailure(test, some_err)
@@ -83,14 +84,14 @@ class LodeMergeXunitTest(unittest.TestCase):
     def get_error_report(self):
         x = self.setup_xunit()
         test = mktest()
-        str = "some error happened"
+        message = "some error happened"
         try:
-            raise RuntimeError(str)
+            raise RuntimeError(message)
         except RuntimeError:
             some_err = sys.exc_info()
 
         ec, ev, tb = some_err
-        ev = unicode(ev)
+        ev = str(ev)
         some_err = (ec, ev, tb)
 
         x.beforeTest(test)
@@ -107,7 +108,7 @@ class LodeMergeXunitTest(unittest.TestCase):
             some_err = sys.exc_info()
 
         ec, ev, tb = some_err
-        ev = unicode(ev)
+        ev = str(ev)
         some_err = (ec, ev, tb)
 
         x.beforeTest(test)
