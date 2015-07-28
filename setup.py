@@ -28,4 +28,10 @@ setup(
             'initializer = lode_runner.plugins.initializer:Initializer',
         ]
     },
+    classifiers = [
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Topic :: Software Development :: Testing'
+        ],
 )
