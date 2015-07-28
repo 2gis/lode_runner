@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import unittest
 import optparse
-from cStringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 import os
 from nose.config import Config

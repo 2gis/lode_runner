@@ -67,7 +67,7 @@ class TestLoader(TestLoader):
 
         result = self._makeTest(test_case_names, testCaseClass)
         if isinstance(result, Failure):
-            return self.suiteClass(map(testCaseClass, test_case_names))
+            return self.suiteClass(list(map(testCaseClass, test_case_names)))
         else:
             return result
 

@@ -2,110 +2,20 @@ import logging
 import os
 import sys
 import codecs
-import re
-import inspect
-import traceback
 import json
 from time import time
-from cStringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from nose.plugins import Plugin
+from nose.plugins.xunit import id_split, nice_classname, format_exception, exc_message, Tee
 from nose.exc import SkipTest
 from nose.pyversion import UNICODE_STRINGS
 
 
 log = logging.getLogger('nose.plugins.lode_json_reporter')
-
-# Invalid XML characters, control characters 0-31 sans \t, \n and \r
-CONTROL_CHARACTERS = re.compile(r"[\000-\010\013\014\016-\037]")
-
-TEST_ID = re.compile(r'^(.*?)(\(.*\))$')
-
-
-def id_split(idval):
-    m = TEST_ID.match(idval)
-    if m:
-        name, fargs = m.groups()
-        head, tail = name.rsplit(".", 1)
-        return [head, tail+fargs]
-    else:
-        return idval.rsplit(".", 1)
-
-
-def nice_classname(obj):
-    """Returns a nice name for class object or class instance.
-
-        >>> nice_classname(Exception()) # doctest: +ELLIPSIS
-        '...Exception'
-        >>> nice_classname(Exception) # doctest: +ELLIPSIS
-        '...Exception'
-
-    """
-    if inspect.isclass(obj):
-        cls_name = obj.__name__
-    else:
-        cls_name = obj.__class__.__name__
-    mod = inspect.getmodule(obj)
-    if mod:
-        name = mod.__name__
-        # jython
-        if name.startswith('org.python.core.'):
-            name = name[len('org.python.core.'):]
-        return "%s.%s" % (name, cls_name)
-    else:
-        return cls_name
-
-
-def exc_message(exc_info):
-    """Return the exception's message."""
-    exc = exc_info[1]
-    if exc is None:
-        # str exception
-        result = exc_info[0]
-    else:
-        try:
-            result = str(exc)
-        except UnicodeEncodeError:
-            try:
-                result = unicode(exc)
-            except UnicodeError:
-                # Fallback to args as neither str nor
-                # unicode(Exception(u'\xe6')) work in Python < 2.6
-                result = exc.args[0]
-    return result
-
-
-def format_exception(exc_info):
-    ec, ev, tb = exc_info
-
-    # formatError() may have turned our exception object into a string, and
-    # Python 3's traceback.format_exception() doesn't take kindly to that (it
-    # expects an actual exception object).  So we work around it, by doing the
-    # work ourselves if ev is a string.
-    if isinstance(ev, basestring):
-        tb_data = ''.join(traceback.format_tb(tb))
-        return tb_data + ev
-    else:
-        return ''.join(traceback.format_exception(*exc_info))
-
-
-class Tee(object):
-    def __init__(self, *args):
-        self._streams = args
-
-    def write(self, *args):
-        _args = ()
-        for arg in args:
-            if isinstance(arg, unicode):
-                arg = arg.encode('utf-8')
-            _args += (arg, )
-
-        for s in self._streams:
-            s.write(*_args)
-
-    def flush(self):
-        for s in self._streams:
-            s.flush()
 
 
 class LodeJsonReporter(Plugin):
