@@ -6,8 +6,9 @@ import collections
 import re
 import sys
 import unittest
+from functools import partial
 
-from nose.pyversion import ismethod, unbound_method
+from nose.pyversion import ismethod, unbound_method, force_unicode
 from nose.plugins import Plugin
 
 log = logging.getLogger('nose.plugins.dataprovider')
@@ -125,8 +126,15 @@ class Dataprovider(Plugin):
             _tests += _make_dataprovided_tests(test)
 
         tests = _tests
-        if len(tests) > 0:
+        if tests:
+            for test in tests:
+                force_unicode_id(test)
             return tests
+
+
+def force_unicode_id(test):
+    new_id = partial(force_unicode, lambda: test.id())
+    test.id = new_id
 
 
 def has_parent(obj, parent):
@@ -257,7 +265,7 @@ def _make_func(func, name, data_set=None):
 
 
 def _prepare_data(data, test):
-    if callable(data):
+    if isinstance(data, collections.Callable):
         if len(inspect.getargspec(data).args):
             _data = data(test)
         else:

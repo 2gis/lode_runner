@@ -12,11 +12,18 @@ from lode_runner.plugins.xunit import Xunit
 time_taken = re.compile(r'\d\.\d\d')
 
 
+test_name = u"runTest_фыва"
+
+
 def mktest():
+    global test_name
     class TestCase(unittest.TestCase):
-        def runTest(self):
-            pass
-    test = TestCase()
+        pass
+    if not isinstance(test_name, str):
+        setattr(TestCase, test_name.encode("utf8"), lambda x: x.assertTrue(True))
+    else:
+        setattr(TestCase, test_name, lambda x: x.assertTrue(True))
+    test = TestCase(methodName="runTest_фыва")
     return test
 
 
@@ -79,7 +86,7 @@ class XunitTest(unittest.TestCase):
 
         tc = tree.find("testcase")
         self.assertEqual(tc.attrib['classname'], "test_xunit.TestCase")
-        self.assertEqual(tc.attrib['name'], "runTest")
+        self.assertEqual(tc.attrib['name'], test_name)
         assert time_taken.match(tc.attrib['time']), (
                     'Expected decimal time: %s' % tc.attrib['time'])
 
@@ -92,14 +99,13 @@ class XunitTest(unittest.TestCase):
     def test_addError(self):
         test = mktest()
         self.x.beforeTest(test)
-        message = 'some error happened'
+        message = u"%s is not 'equal' to %s" % (u'Тест', u'тест')
         try:
             raise RuntimeError(message)
         except RuntimeError:
             some_err = sys.exc_info()
 
         ec, ev, tb = some_err
-        # ev = str(ev)
         some_err = (ec, ev.args[0], tb)
 
         self.x.addError(test, some_err)
@@ -115,7 +121,7 @@ class XunitTest(unittest.TestCase):
 
         tc = tree.find("testcase")
         self.assertEqual(tc.attrib['classname'], "test_xunit.TestCase")
-        self.assertEqual(tc.attrib['name'], "runTest")
+        self.assertEqual(tc.attrib['name'], test_name)
         assert time_taken.match(tc.attrib['time']), (
                     'Expected decimal time: %s' % tc.attrib['time'])
 
