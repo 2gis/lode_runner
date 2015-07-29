@@ -1,6 +1,8 @@
 # coding: utf-8
 
 import multiprocessing
+from functools import partial
+
 from xml.etree import ElementTree
 try:
     from StringIO import StringIO
@@ -57,3 +59,8 @@ class Xunit(Xunit):
         if self.config.verbosity > 1:
             stream.writeln("-" * 70)
             stream.writeln("XML: %s" % self.error_report_filename)
+
+    def beforeTest(self, test):
+        """Initializes a timer before starting a test."""
+        test.id = partial(force_unicode, test.id())
+        super(Xunit, self).beforeTest(test)
