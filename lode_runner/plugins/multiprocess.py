@@ -126,7 +126,10 @@ class MultiProcessTestRunner(MultiProcessTestRunner):
 def runner(ix, testQueue, resultQueue, currentaddr, currentstart,
            keyboardCaught, shouldStop, loaderClass, resultClass, config, plugins):
     from logging import getLogger
-    from Queue import Empty
+    try:
+        from Queue import Empty
+    except ImportError:
+        from queue import Empty
 
     log = getLogger(__name__)
     try:

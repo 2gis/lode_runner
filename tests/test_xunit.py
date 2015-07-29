@@ -16,9 +16,13 @@ test_name = u"runTest_фыва"
 
 
 def mktest():
+    global test_name
     class TestCase(unittest.TestCase):
         pass
-    setattr(TestCase, test_name.encode("utf8"), lambda x: x.assertTrue(True))
+    if not isinstance(test_name, str):
+        setattr(TestCase, test_name.encode("utf8"), lambda x: x.assertTrue(True))
+    else:
+        setattr(TestCase, test_name, lambda x: x.assertTrue(True))
     test = TestCase(methodName="runTest_фыва")
     return test
 

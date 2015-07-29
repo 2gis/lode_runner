@@ -10,7 +10,6 @@ from functools import partial
 
 from nose.pyversion import ismethod, unbound_method, force_unicode
 from nose.plugins import Plugin
-from nose.case import Test
 
 log = logging.getLogger('nose.plugins.dataprovider')
 
@@ -266,7 +265,7 @@ def _make_func(func, name, data_set=None):
 
 
 def _prepare_data(data, test):
-    if callable(data):
+    if isinstance(data, collections.Callable):
         if len(inspect.getargspec(data).args):
             _data = data(test)
         else:
