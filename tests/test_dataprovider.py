@@ -120,4 +120,3 @@ class ClassDataproviderTest(unittest.TestCase):
 class TestAllTestsRan(unittest.TestCase):
     def test_all_tests_ran(self):
         self.assertEqual([], tests_to_run)
-
