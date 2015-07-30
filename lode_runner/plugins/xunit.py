@@ -1,13 +1,14 @@
 # coding: utf-8
 
 import multiprocessing
-from functools import partial
 
 from xml.etree import ElementTree
 try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
+
+from lode_runner.plugins import force_unicode_decorator
 
 from nose.plugins.xunit import Xunit, force_unicode
 from nose.plugins.base import Plugin
@@ -62,5 +63,5 @@ class Xunit(Xunit):
 
     def beforeTest(self, test):
         """Initializes a timer before starting a test."""
-        test.id = partial(force_unicode, test.id())
+        test.id = force_unicode_decorator(test.id)
         super(Xunit, self).beforeTest(test)
