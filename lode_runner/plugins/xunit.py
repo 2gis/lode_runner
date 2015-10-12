@@ -3,6 +3,7 @@
 import multiprocessing
 
 from xml.etree import ElementTree
+
 try:
     from StringIO import StringIO
 except ImportError:
@@ -14,13 +15,18 @@ from nose.plugins.xunit import Xunit, force_unicode
 from nose.plugins.base import Plugin
 
 
-MANAGER = multiprocessing.Manager()
-MP_ERRORLIST = MANAGER.list()
-MP_STATS = MANAGER.dict({
-    'errors': 0,
-    'failures': 0,
-    'passes': 0,
-    'skipped': 0})
+class MultiprocessContext(object):
+    error_list = None
+    stats = None
+
+    def __init__(self):
+        manager = multiprocessing.Manager()
+        self.error_list = manager.list()
+        self.stats = manager.dict({
+            'errors': 0,
+            'failures': 0,
+            'passes': 0,
+            'skipped': 0})
 
 
 class Xunit(Xunit):
@@ -30,8 +36,10 @@ class Xunit(Xunit):
         self.config = config
         if self.enabled:
             if hasattr(options, 'multiprocess_workers') and options.multiprocess_workers:
-                self.stats = MP_STATS
-                self.errorlist = MP_ERRORLIST
+                if multiprocessing.current_process().name == 'MainProcess':
+                    Xunit.mp_context = MultiprocessContext()
+                self.stats = Xunit.mp_context.stats
+                self.errorlist = Xunit.mp_context.error_list
             else:
                 super(Xunit, self).configure(options, config)
 
