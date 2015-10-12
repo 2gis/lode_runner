@@ -97,6 +97,8 @@ class MultiProcessTestRunner(MultiProcessTestRunner):
         currentaddr = Value('c', bytes_(''))
         currentstart = Value('d', time.time())
         keyboardCaught = Event()
+
+        mp_context = {plugin.name: plugin.mp_context for plugin in _instantiate_plugins if 'mp_context' in dir(plugin)}
         p = Process(target=runner,
                     args=(
                         iworker, testQueue,
@@ -108,7 +110,8 @@ class MultiProcessTestRunner(MultiProcessTestRunner):
                         self.loaderClass,
                         result.__class__,
                         pickle.dumps(self.config),
-                        _instantiate_plugins))
+                        _instantiate_plugins,
+                        mp_context))
         p.currentaddr = currentaddr
         p.currentstart = currentstart
         p.keyboardCaught = keyboardCaught
@@ -117,15 +120,11 @@ class MultiProcessTestRunner(MultiProcessTestRunner):
         signal.signal(signal.SIGILL, old)
         return p
 
-    # def run(self, test):
-    #     from multiprocessing import Manager
-    #     self.modules = Manager().dict(sys.modules)
-    #     return super(MultiProcessTestRunner, self).run(test)
-
 
 def runner(ix, testQueue, resultQueue, currentaddr, currentstart,
-           keyboardCaught, shouldStop, loaderClass, resultClass, config, plugins):
+           keyboardCaught, shouldStop, loaderClass, resultClass, config, plugins, mp_context):
     from logging import getLogger
+
     try:
         from Queue import Empty
     except ImportError:
@@ -134,8 +133,11 @@ def runner(ix, testQueue, resultQueue, currentaddr, currentstart,
     log = getLogger(__name__)
     try:
         try:
+            for key in mp_context:
+                plugin = next(x for x in plugins if x.name == key)
+                plugin.mp_context = mp_context[key]
             return __runner(ix, testQueue, resultQueue, currentaddr, currentstart,
-                    keyboardCaught, shouldStop, loaderClass, resultClass, config, plugins)
+                            keyboardCaught, shouldStop, loaderClass, resultClass, config, plugins)
         except KeyboardInterrupt:
             log.debug('Worker %s keyboard interrupt, stopping', ix)
     except Empty:
@@ -143,9 +145,9 @@ def runner(ix, testQueue, resultQueue, currentaddr, currentstart,
 
 
 def __runner(ix, testQueue, resultQueue, currentaddr, currentstart,
-           keyboardCaught, shouldStop, loaderClass, resultClass, config, plugins):
+             keyboardCaught, shouldStop, loaderClass, resultClass, config, plugins):
     import nose.plugins.multiprocess as mp
 
     mp._instantiate_plugins = plugins
     mp.__runner(ix, testQueue, resultQueue, currentaddr, currentstart,
-           keyboardCaught, shouldStop, loaderClass, resultClass, config)
+                keyboardCaught, shouldStop, loaderClass, resultClass, config)
