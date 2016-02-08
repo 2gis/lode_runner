@@ -4,27 +4,7 @@ from nose.core import TextTestResult, TextTestRunner, TestProgram
 from nose.proxy import ResultProxyFactory, ResultProxy
 from nose.loader import TestLoader
 from nose.suite import ContextSuiteFactory
-from nose.case import Test
 from nose.failure import Failure
-
-
-class ContextSuiteFactory(ContextSuiteFactory):
-    def makeSuite(self, tests, context, **kw):
-        _tests = list()
-        for test in tests:
-            if isinstance(test, Test):
-                test_method = getattr(test.test, test.test._testMethodName).__func__
-                if hasattr(test.test, 'priority'):
-                    priority = test.test.priority
-                elif hasattr(test_method, 'priority'):
-                    priority = test_method.priority
-                else:
-                    priority = "unknown"
-
-                test.priority = priority
-
-            _tests.append(test)
-        return super(ContextSuiteFactory, self).makeSuite(_tests, context, **kw)
 
 
 class ResultProxy(ResultProxy):
