@@ -18,6 +18,7 @@ test_name = u"runTest_фыва"
 def mktest():
     global test_name
     class TestCase(unittest.TestCase):
+        __qualname__ = "TestCase"
         pass
     if not isinstance(test_name, str):
         setattr(TestCase, test_name.encode("utf8"), lambda x: x.assertTrue(True))

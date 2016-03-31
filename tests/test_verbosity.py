@@ -10,15 +10,22 @@ from lode_runner import run
 from lode_runner.core import LodeRunner
 from nose.config import Config
 from nose.plugins.manager import DefaultPluginManager
+from nose.tools import nottest
+
+@nottest
+class TestCase(unittest.TestCase):
+        def runTest(self):
+            pass
 
 
 def mksuite():
     class TestCase(unittest.TestCase):
+        __qualname__ = "TestCase"
+
         def runTest(self):
             pass
-    test = TestCase()
 
-    return [test]
+    return [TestCase()]
 
 
 class TestVerbosity(unittest.TestCase):

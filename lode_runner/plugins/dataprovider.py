@@ -11,7 +11,7 @@ from lode_runner.plugins import force_unicode_decorator
 from nose.pyversion import ismethod, unbound_method
 from nose.plugins import Plugin
 
-log = logging.getLogger('nose.plugins.dataprovider')
+log = logging.getLogger('lode.plugins.dataprovider')
 
 if sys.version_info[:2] < (3, 0):
     def isstring(s):
@@ -83,63 +83,57 @@ class Dataprovider(Plugin):
 
         for name, obj in inspect.getmembers(module):
             if isinstance(obj, type):
-                if not has_parent(obj, unittest.TestCase):
+                if not _has_parent(obj, unittest.TestCase):
                     continue
 
                 self.loadTestsFromTestCase(obj)
 
     def loadTestsFromTestCase(self, test_case):
         methods = [method for method in dir(test_case) if
-                   hasattr(getattr(test_case, method), "__call__")
-                   and not method.startswith("_")]
-        methods = [method for method in methods if self.is_test.match(method)]
-        tests = [method for method in methods if
-                 hasattr(getattr(test_case(method), test_case(method)._testMethodName), '__func__')]
+                   callable(getattr(test_case, method)) and self.is_test.match(method)]
 
-        self.makeTest(tests, test_case)
+        _expand_tests(methods, test_case)
 
     def makeTest(self, obj, parent):
-        if inspect.isfunction(obj) and parent and not isinstance(parent, types.ModuleType):
-            # This is a Python 3.x 'unbound method'.  Wrap it with its
-            #  associated class..
-            obj = unbound_method(parent, obj)
-
-        tests = []
-        if isinstance(obj, list):
-            tests = list(map(parent, obj))
-        elif ismethod(obj):
-            tests = [parent(obj.__name__)]
+        tests = _expand_tests(obj, parent)
 
         _tests = []
-        while tests:
-            test = tests.pop(0)
-            _test = _make_property_provided_tests(test)
-            if _test == [test]:
-                _tests += _test
-            else:
-                tests += _test
-
-        tests = _tests
-
-        _tests = []
-        for test in tests:
-            _tests += _make_dataprovided_tests(test)
-
-        tests = _tests
         if tests:
             for test in tests:
-                test.id = force_unicode_decorator(test.id)
-            return tests
+                _test = parent(test)
+                _test.id = force_unicode_decorator(_test.id)
+                _tests.append(_test)
+
+            return _tests
 
 
-def has_parent(obj, parent):
+def _has_parent(obj, parent):
     if parent in obj.__bases__:
         return True
 
     for base in obj.__bases__:
-        return has_parent(base, parent)
+        return _has_parent(base, parent)
 
     return False
+
+
+def _expand_tests(obj, parent):
+    if inspect.isfunction(obj) and parent and not isinstance(parent, types.ModuleType):
+        # This is a Python 3.x 'unbound method'.  Wrap it with its
+        #  associated class..
+        obj = unbound_method(parent, obj)
+
+    tests = []
+    if isinstance(obj, list):
+        tests = obj
+    elif ismethod(obj):
+        tests = [obj.__name__]
+
+    _tests = []
+    for test in tests:
+        _tests += _make_dataprovided_tests(parent, test)
+
+    return _tests
 
 
 def _to_str(value, custom=False):
@@ -179,13 +173,12 @@ def _data_set_safe_name(data_set):
     return result
 
 
-def _make_dataprovided_tests(test):
-    parent = test.__class__
-    testMethod = _get_test_method(test)
+def _make_dataprovided_tests(parent, test):
+    testMethod = _get_test_method(parent, test)
     if hasattr(testMethod, '_data_provided'):
         data = testMethod._data_provided
         del testMethod._data_provided
-        _data = _prepare_data(data, test)
+        _data = _prepare_data(data, parent)
 
         dataprovided_tests = []
         for data_set in _data:
@@ -193,8 +186,7 @@ def _make_dataprovided_tests(test):
             name = testMethod.__name__ + "_" + safe_name
             new_test_func = _make_func(testMethod, name, data_set)
             setattr(parent, new_test_func.__name__, new_test_func)
-            new_test = parent(new_test_func.__name__)
-            dataprovided_tests.append(new_test)
+            dataprovided_tests.append(name)
 
         delattr(parent, testMethod.__name__)
 
@@ -203,42 +195,11 @@ def _make_dataprovided_tests(test):
         return [test]
 
 
-def _make_property_provided_tests(test):
-    parent = test.__class__
-    testMethod = _get_test_method(test)
-    if hasattr(testMethod, '_property_provided'):
-        property_name, data = testMethod._property_provided.pop(0)
-        _data = _prepare_data(data, test)
-
-        property_provided_tests = []
-        for data_set in _data:
-            new_parent_name = parent.__name__ + "_" + _data_set_safe_name(data_set)
-            if hasattr(sys.modules[parent.__module__], new_parent_name):
-                new_parent = getattr(sys.modules[parent.__module__], new_parent_name)
-            else:
-                new_parent = type(new_parent_name, (parent,), {'__module__': parent.__module__})
-                setattr(sys.modules[new_parent.__module__], new_parent_name, new_parent)
-
-            name = testMethod.__name__ + "_" + _data_set_safe_name(data_set)
-            setattr(new_parent, property_name, data_set)
-
-            new_test_func = _make_func(testMethod, name)
-            if new_test_func._property_provided == []:
-                del new_test_func._property_provided
-            setattr(new_parent, new_test_func.__name__, new_test_func)
-            new_test = new_parent(new_test_func.__name__)
-            property_provided_tests.append(new_test)
-
-        delattr(parent, testMethod.__name__)
-        delattr(sys.modules[parent.__module__], parent.__name__)
-
-        return property_provided_tests
-    else:
-        return [test]
-
-
-def _get_test_method(test):
-    return getattr(test, test._testMethodName).__func__
+def _get_test_method(parent, test):
+    test_method = getattr(parent, test)
+    if not inspect.isfunction(test_method):
+        test_method = test_method.__func__
+    return test_method
 
 
 def _make_data(data):
@@ -259,14 +220,13 @@ def _make_func(func, name, data_set=None):
     return standalone_func
 
 
-def _prepare_data(data, test):
-    if isinstance(data, collections.Callable):
-        if len(inspect.getargspec(data).args):
-            _data = data(test)
-        else:
-            _data = data()
+def _prepare_data(data, parent):
+    if callable(data):
+        _data = data()
     elif isinstance(data, staticmethod):
         _data = data.__func__()
+    elif isinstance(data, classmethod):
+        _data = data.__func__(parent)
     else:
         _data = data
     if not isinstance(_data, list):
@@ -284,27 +244,6 @@ def dataprovider(data):
                 method._data_provided = data
         else:
             func._data_provided = data
-        return func
-
-    return wrapper
-
-
-def _add_property(func, property_name, data):
-    if hasattr(func, '_property_provided'):
-        func._property_provided += [(property_name, data)]
-    else:
-        func._property_provided = [(property_name, data)]
-
-
-def property_provider(property_name, data):
-    def wrapper(func):
-        if inspect.isclass(func):
-            for method_name, method in inspect.getmembers(func, predicate=inspect.ismethod):
-                _add_property(method.__func__, property_name, data)
-            for method_name, method in inspect.getmembers(func, predicate=inspect.isfunction):
-                _add_property(method, property_name, data)
-        else:
-            _add_property(func, property_name, data)
         return func
 
     return wrapper
