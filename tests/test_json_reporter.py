@@ -15,6 +15,7 @@ time_taken = re.compile(r'\d\.\d\d')
 
 def mktest():
     class TestCase(unittest.TestCase):
+        __qualname__ = "TestCase"
         def runTest(self):
             pass
     test = TestCase()

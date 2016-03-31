@@ -43,12 +43,13 @@ class DataproviderTest(unittest.TestCase):
     def test_data_dataprovider(self, data):
         tests_to_run.remove("%s_%s" % ("test_data_dataprovider", data))
 
-    @property
-    def value(self):
+    @classmethod
+    def value(cls):
         return 1
 
-    def method_provider(self):
-        value = self.value
+    @classmethod
+    def method_provider(cls):
+        value = cls.value()
         return [(x + value) for x in (0, 1, 2)]
 
     @dataprovider(method_provider)
@@ -100,8 +101,8 @@ class NestedDataprovidersTest(unittest.TestCase):
         tuple_string = "(u'%s', u'%s')" % (first, second)
         tests_to_run.remove("%s_%s" % ("test_tuple_dataprovider", tuple_string))
 
-    TestNamedTuple = namedtuple('TestNamedTuple', 'one two')
-    @dataprovider([(TestNamedTuple(u'первый тест', u'второй тест'),)])
+    NamedTuple = namedtuple('NamedTuple', 'one two')
+    @dataprovider([(NamedTuple(u'первый тест', u'второй тест'),)])
     def test_namedtuple_dataprovider(self, data):
         l = list(iter(data._asdict().items()))
         key1, value1 = l[0]
