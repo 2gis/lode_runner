@@ -55,7 +55,7 @@ class Xunit(Xunit):
         self.stats['total'] = (self.stats['errors'] + self.stats['failures']
                                + self.stats['passes'] + self.stats['skipped'])
         testsuite = ElementTree.Element("testsuite", attrib={
-            "name": "nosetests",
+            "name": str(self.xunit_testsuite_name),
             "tests": str(self.stats['total']),
             "errors": str(self.stats['errors']),
             "failures": str(self.stats['failures']),
