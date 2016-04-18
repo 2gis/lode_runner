@@ -40,6 +40,7 @@ class Xunit(Xunit):
                     Xunit.mp_context = MultiprocessContext()
                 self.stats = Xunit.mp_context.stats
                 self.errorlist = Xunit.mp_context.error_list
+                self.xunit_testsuite_name = options.xunit_testsuite_name
             else:
                 super(Xunit, self).configure(options, config)
 
