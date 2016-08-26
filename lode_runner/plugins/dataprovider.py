@@ -1,12 +1,12 @@
 import logging
 import inspect
 import types
-import copy
 import collections
 import re
 import sys
 import unittest
 
+from functools import update_wrapper
 from lode_runner.plugins import force_unicode_decorator
 from nose.pyversion import ismethod, unbound_method
 from nose.plugins import Plugin
@@ -215,7 +215,7 @@ def _make_func(func, name, data_set=None):
         standalone_func = lambda *args: func(*(args + data_set))
     else:
         standalone_func = lambda *args: func(*args)
-    standalone_func.__dict__.update(copy.deepcopy(func.__dict__))
+    update_wrapper(standalone_func, func)
     standalone_func.__name__ = name
     return standalone_func
 
