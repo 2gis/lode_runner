@@ -15,8 +15,10 @@ from nose.failure import Failure
 
 
 class DiscoverTest(unittest.TestCase):
-    tests_location = "tests/data/dataprovided/dataprovided.py"
-    tested_test = ":TestCase.test_with_dataprovider_fixture_2"
+    path = "tests/data/dataprovided/dataprovided.py"
+    test = "test_with_dataprovider_fixture_with_dataset_1"
+    test_full_name = "%s:TestCase.%s" % (path, test)
+
     argv = []
 
     ran_1_test = "Ran 1 test"
@@ -47,7 +49,7 @@ class DiscoverWithDataprovidersFirstTest(DiscoverTest):
         result = run(testRunner=LodeRunner(stream=stream), argv=[
             "lode_runner",
             "--dataproviders-first",
-            "-m", "test_with_dataprovider_fixture_2",
+            "-m", self.test,
             "tests/data/dataprovided/dataprovided.py"])
         self.assertTrue(self.ran_1_test in stream.getvalue(),
                         "\n%s in stream output:\n%s" % (self.ran_1_test, stream.getvalue()))
@@ -55,7 +57,7 @@ class DiscoverWithDataprovidersFirstTest(DiscoverTest):
 
     def test_success_discover_dataprovided_test_by_name(self):
         stream = StringIO()
-        tests = TestLoader(config=self.config).loadTestsFromName(self.tests_location + self.tested_test)
+        tests = TestLoader(config=self.config).loadTestsFromName(self.test_full_name)
         result = LodeTestResult(stream, None, 0)
         tests.run(result)
 
@@ -67,7 +69,7 @@ class DiscoverWithDataprovidersFirstTest(DiscoverTest):
 class DiscoverWithoutDataprovidersFirstTest(DiscoverTest):
     def test_discover_all_tests(self):
         stream = StringIO()
-        tests = TestLoader(config=self.config).loadTestsFromName(self.tests_location)
+        tests = TestLoader(config=self.config).loadTestsFromName(self.path)
         extracted_tests = list()
         for t in tests._tests:
             extracted_tests += t._precache
@@ -80,7 +82,7 @@ class DiscoverWithoutDataprovidersFirstTest(DiscoverTest):
 
     def test_fail_discover_dataprovided_test_by_name(self):
         stream = StringIO()
-        tests = TestLoader(config=self.config).loadTestsFromName(self.tests_location + self.tested_test)
+        tests = TestLoader(config=self.config).loadTestsFromName(self.test_full_name)
         result = LodeTestResult(stream, None, 0)
         tests.run(result)
 
@@ -88,5 +90,5 @@ class DiscoverWithoutDataprovidersFirstTest(DiscoverTest):
         self.assertEqual(1, len(result.errors))
         failure = result.errors[0][0]
         self.assertIsInstance(failure.test, Failure)
-        self.assertEqual("Failure: ValueError (No such test TestCase.test_with_dataprovider_fixture_2)", str(failure))
+        self.assertEqual("Failure: ValueError (No such test TestCase.%s)" % self.test, str(failure))
         self.assertFalse(result.wasSuccessful())

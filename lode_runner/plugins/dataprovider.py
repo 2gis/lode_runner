@@ -51,14 +51,14 @@ class Dataprovider(Plugin):
                                "[DATAPROVIDERS_FIRST]")
         parser.add_option('--dataproviders-show', action="store_true",
                           default=env.get('DATAPROVIDERS_SHOW', False),
-                          dest="dataproviders_insert",
+                          dest="dataproviders_show",
                           help="Show dataproviders data by inserting it into test names"
                                "[DATAPROVIDERS_SHOW]")
 
     def configure(self, options, conf):
         super(Dataprovider, self).configure(options, conf)
         conf.dataproviders_first = bool(options.dataproviders_first)
-        conf.dataproviders_insert = bool(options.dataproviders_insert)
+        conf.dataproviders_show = bool(options.dataproviders_show)
         self.enabled = True
         if not self.enabled:
             return
@@ -138,7 +138,7 @@ class Dataprovider(Plugin):
 
             dataprovided_tests = []
             for num, data_set in enumerate(_data):
-                if self.conf.dataproviders_insert:
+                if self.conf.dataproviders_show:
                     safe_name = _data_set_safe_name(data_set)
                 else:
                     safe_name = "with_dataset_%s" % num
