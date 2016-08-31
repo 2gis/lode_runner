@@ -49,16 +49,16 @@ class Dataprovider(Plugin):
                           dest="dataproviders_first",
                           help="Call dataproviders before tests collecting."
                                "[DATAPROVIDERS_FIRST]")
-        parser.add_option('--dataproviders-show', action="store_true",
-                          default=env.get('DATAPROVIDERS_SHOW', False),
-                          dest="dataproviders_show",
+        parser.add_option('--dataproviders-verbose', action="store_true",
+                          default=env.get('DATAPROVIDERS_VERBOSE', False),
+                          dest="dataproviders_verbose",
                           help="Show dataproviders data by inserting it into test names"
-                               "[DATAPROVIDERS_SHOW]")
+                               "[DATAPROVIDERS_VERBOSE]")
 
     def configure(self, options, conf):
         super(Dataprovider, self).configure(options, conf)
         conf.dataproviders_first = bool(options.dataproviders_first)
-        conf.dataproviders_show = bool(options.dataproviders_show)
+        conf.dataproviders_verbose = bool(options.dataproviders_verbose)
         self.enabled = True
         if not self.enabled:
             return
@@ -138,7 +138,7 @@ class Dataprovider(Plugin):
 
             dataprovided_tests = []
             for num, data_set in enumerate(_data):
-                if self.conf.dataproviders_show:
+                if self.conf.dataproviders_verbose:
                     safe_name = _data_set_safe_name(data_set)
                 else:
                     safe_name = "with_dataset_%s" % num
@@ -178,11 +178,11 @@ def _convert(data):
     if isstring(data):
         return _to_str(data, True)
     elif isinstance(data, tuple) and hasattr(data, '_asdict'):  # Handle namedtuple
-        items = iter(data._asdict().items())
-        return dict(map(_convert, items))
+        items = iter(data._asdict().values())
+        return type(data)(*map(_convert, items))
     elif isinstance(data, collections.Mapping):
         items = iter(data.items())
-        return dict(map(_convert, items))
+        return type(data)(map(_convert, items))
     elif isinstance(data, collections.Iterable):
         return type(data)(map(_convert, data))
     else:

@@ -1,123 +1,164 @@
 # -*- coding: utf-8 -*-
-from collections import namedtuple
 import unittest
+import os
+import sys
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
-from lode_runner.plugins.dataprovider import dataprovider
+from lode_runner import run
+from lode_runner.plugins.dataprovider import Dataprovider
+from lode_runner.core import TestLoader, LodeTestResult, LodeRunner
 
-tests_to_run = [
-    "test_data_dataprovider_1",
-    "test_data_dataprovider_2",
-    "test_data_dataprovider_3",
-    "test_method_dataprovider_1",
-    "test_method_dataprovider_2",
-    "test_method_dataprovider_3",
-    "test_function_dataprovider_1",
-    "test_function_dataprovider_2",
-    "test_function_dataprovider_3",
-    u"test_unicode_string_dataprovider_Первый Тест",
-    u"test_unicode_string_dataprovider_Второй Тест",
-    "test_single_dataprovider_('.1', u'/2')",
-    "test_class_dataprovider_1",
-    "test_class_dataprovider_2",
-    "test_class_dataprovider_3",
-    u"test_dict_dataprovider_{'one': u'первый тест', 'two': u'второй тест'}",
-    u"test_list_dataprovider_[u'первый тест', u'второй тест']",
-    u"test_tuple_dataprovider_(u'первый тест', u'второй тест')",
-    u"test_namedtuple_dataprovider_({'one': u'первый тест', 'two': u'второй тест'})",
+from nose.config import Config
+from nose.plugins import PluginManager
+from nose.failure import Failure
+
+
+PY2 = sys.version_info[0] == 2
+
+verbose_test_names = [
+    "test_class_dataprovider_1 (dataprovided.ClassDataproviderTest)",
+    "test_class_dataprovider_2 (dataprovided.ClassDataproviderTest)",
+    "test_class_dataprovider_3 (dataprovided.ClassDataproviderTest)",
+    "test_function_dataprovider_1 (dataprovided.DataproviderTest)",
+    "test_function_dataprovider_2 (dataprovided.DataproviderTest)",
+    "test_function_dataprovider_3 (dataprovided.DataproviderTest)",
+    "test_method_dataprovider_1 (dataprovided.DataproviderTest)",
+    "test_method_dataprovider_2 (dataprovided.DataproviderTest)",
+    "test_method_dataprovider_3 (dataprovided.DataproviderTest)",
+    "test_raw_dataprovider_1 (dataprovided.DataproviderTest)",
+    "test_raw_dataprovider_2 (dataprovided.DataproviderTest)",
+    "test_raw_dataprovider_3 (dataprovided.DataproviderTest)",
+    "test_single_dataprovider_('<dot>1', '<slash>2') (dataprovided.DataproviderTest)",
+    "test_unicode_string_dataprovider_Первый Тест (dataprovided.DataproviderTest)",
+    "test_unicode_string_dataprovider_Второй Тест (dataprovided.DataproviderTest)",
 ]
 
+if PY2:
+    verbose_test_names += [
+        "test_dict_dataprovider_OrderedDict([('one', u'первый тест'), ('two', u'второй тест')]) (dataprovided.NestedDataprovidersTest)",
+        "test_list_dataprovider_[u'первый тест', u'второй тест'] (dataprovided.NestedDataprovidersTest)",
+        "test_namedtuple_dataprovider_(NamedTuple(one=u'первый тест', two=u'второй тест'),) (dataprovided.NestedDataprovidersTest)",
+        "test_tuple_dataprovider_(u'первый тест', u'второй тест') (dataprovided.NestedDataprovidersTest)",
+    ]
+else:
+    verbose_test_names += [
+        "test_dict_dataprovider_OrderedDict([('one', 'первый тест'), ('two', 'второй тест')]) (dataprovided.NestedDataprovidersTest)",
+        "test_list_dataprovider_['первый тест', 'второй тест'] (dataprovided.NestedDataprovidersTest)",
+        "test_namedtuple_dataprovider_(NamedTuple(one='первый тест', two='второй тест'),) (dataprovided.NestedDataprovidersTest)",
+        "test_tuple_dataprovider_('первый тест', 'второй тест') (dataprovided.NestedDataprovidersTest)",
+    ]
 
-def function_provider():
-    return [1, 2, 3]
 
+class BaseDataproviderTest(unittest.TestCase):
+    path = os.path.dirname(os.path.realpath(__file__)) + "/data/dataprovided/dataprovided.py"
+    test = "test_raw_dataprovider_with_dataset_1"
+    test_case = "DataproviderTest"
+    test_full_name = "%s:%s.%s" % (path, test_case, test)
+    ran_1_test = "Ran 1 test"
+    no_such_test = "ValueError: No such test"
 
-class DataproviderTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.set_up_class_called = True
+    def cleanup(self):
+        del sys.modules["dataprovided"]
+        self.argv = []
 
     def setUp(self):
-        self.set_up_called = True
-
-    @dataprovider([1, 2, 3])
-    def test_data_dataprovider(self, data):
-        tests_to_run.remove("%s_%s" % ("test_data_dataprovider", data))
-
-    @classmethod
-    def value(cls):
-        return 1
-
-    @classmethod
-    def method_provider(cls):
-        value = cls.value()
-        return [(x + value) for x in (0, 1, 2)]
-
-    @dataprovider(method_provider)
-    def test_method_dataprovider(self, data):
-        tests_to_run.remove("%s_%s" % ("test_method_dataprovider", data))
-
-    @dataprovider(function_provider)
-    def test_function_dataprovider(self, data):
-        tests_to_run.remove("%s_%s" % ("test_function_dataprovider", data))
-
-    @dataprovider([u'Первый Тест', u"Второй Тест"])
-    def test_unicode_string_dataprovider(self, data):
-        tests_to_run.remove("%s_%s" % ("test_unicode_string_dataprovider", data))
-
-    @dataprovider([1])
-    def test_setup_runs(self, data):
-        self.assertTrue(self.set_up_called)
-        self.assertTrue(self.set_up_class_called)
+        self.addCleanup(self.cleanup)
+        self.config = Config()
+        self.config.plugins = PluginManager()
+        self.config.plugins.addPlugin(Dataprovider())
+        self.argv = []
+        # 0 is always should be program name
+        self.argv.append("lode_runner")
+        self.config.configure(self.argv)
 
 
-class SingleDataproviderTest(unittest.TestCase):
-    @dataprovider([
-        ('.1', u'/2'),
-    ])
-    def test_single_dataprovider(self, data1, data2):
-        tuple_string = "('%s', u'%s')" % (data1, data2)
-        test_name = "%s_%s" % ("test_single_dataprovider", tuple_string)
-        tests_to_run.remove(test_name)
+class DataproviderTest(BaseDataproviderTest):
+    def test_all_tests_discovered(self):
+        stream = StringIO()
+        tests = TestLoader(config=self.config).loadTestsFromName(self.path)
+        result = LodeTestResult(stream, None, 0)
+        tests.run(result)
+        self.assertTrue(result.wasSuccessful(), result.errors + result.failures)
+        self.assertEqual(19, result.testsRun)
+
+    def test_dataprovider_names(self):
+        tests = TestLoader(config=self.config).loadTestsFromName(self.path)
+        extracted_tests = list()
+        for suite in tests:
+            for test in suite:
+                extracted_tests.append(test)
+        self.assertEqual([
+            "test_class_dataprovider_with_dataset_0 (dataprovided.ClassDataproviderTest)",
+            "test_class_dataprovider_with_dataset_1 (dataprovided.ClassDataproviderTest)",
+            "test_class_dataprovider_with_dataset_2 (dataprovided.ClassDataproviderTest)",
+            "test_function_dataprovider_with_dataset_0 (dataprovided.DataproviderTest)",
+            "test_function_dataprovider_with_dataset_1 (dataprovided.DataproviderTest)",
+            "test_function_dataprovider_with_dataset_2 (dataprovided.DataproviderTest)",
+            "test_method_dataprovider_with_dataset_0 (dataprovided.DataproviderTest)",
+            "test_method_dataprovider_with_dataset_1 (dataprovided.DataproviderTest)",
+            "test_method_dataprovider_with_dataset_2 (dataprovided.DataproviderTest)",
+            "test_raw_dataprovider_with_dataset_0 (dataprovided.DataproviderTest)",
+            "test_raw_dataprovider_with_dataset_1 (dataprovided.DataproviderTest)",
+            "test_raw_dataprovider_with_dataset_2 (dataprovided.DataproviderTest)",
+            "test_single_dataprovider_with_dataset_0 (dataprovided.DataproviderTest)",
+            "test_unicode_string_dataprovider_with_dataset_0 (dataprovided.DataproviderTest)",
+            "test_unicode_string_dataprovider_with_dataset_1 (dataprovided.DataproviderTest)",
+            "test_dict_dataprovider_with_dataset_0 (dataprovided.NestedDataprovidersTest)",
+            "test_list_dataprovider_with_dataset_0 (dataprovided.NestedDataprovidersTest)",
+            "test_namedtuple_dataprovider_with_dataset_0 (dataprovided.NestedDataprovidersTest)",
+            "test_tuple_dataprovider_with_dataset_0 (dataprovided.NestedDataprovidersTest)",
+        ], [str(test) for test in extracted_tests])
+
+    def test_dataprovider_verbose_names(self):
+        self.argv.append("--dataproviders-verbose")
+        self.config.configure(self.argv)
+        tests = TestLoader(config=self.config).loadTestsFromName(self.path)
+        extracted_tests = list()
+        for suite in tests:
+            for test in suite:
+                extracted_tests.append(test)
+        self.assertEqual(verbose_test_names, [str(test) for test in extracted_tests])
 
 
-class NestedDataprovidersTest(unittest.TestCase):
-    @dataprovider([[u'первый тест', u'второй тест']])
-    def test_list_dataprovider(self, data):
-        list_string = "[u'%s', u'%s']" % (data[0], data[1])
-        test_name = "%s_%s" % ("test_list_dataprovider", list_string)
-        tests_to_run.remove(test_name)
+class DiscoverWithDataprovidersFirstTest(BaseDataproviderTest):
+    def setUp(self):
+        super(DiscoverWithDataprovidersFirstTest, self).setUp()
+        self.argv.append("--dataproviders-first")
+        self.config.configure(self.argv)
 
-    @dataprovider([{'one': u'первый тест', 'two': u'второй тест'}])
-    def test_dict_dataprovider(self, data):
-        l = sorted(iter(data.items()))
-        key1, value1 = l[0]
-        key2, value2 = l[1]
-        dict_string = "{'%s': u'%s', '%s': u'%s'}" % (key1, value1, key2, value2)
-        test_name = "%s_%s" % ("test_dict_dataprovider", dict_string)
-        tests_to_run.remove(test_name)
+    def test_discover_dataprovided_test_by_regexp(self):
+        stream = StringIO()
+        self.argv.append("-m")
+        self.argv.append(self.test)
+        self.config.configure(self.argv)
+        tests = TestLoader(config=self.config).loadTestsFromName(self.path)
+        result = LodeTestResult(stream, None, 0)
+        tests.run(result)
+        self.assertTrue(result.wasSuccessful(), result.errors + result.failures)
+        self.assertEqual(1, result.testsRun)
 
-    @dataprovider([(u'первый тест', u'второй тест')])
-    def test_tuple_dataprovider(self, first, second):
-        tuple_string = "(u'%s', u'%s')" % (first, second)
-        tests_to_run.remove("%s_%s" % ("test_tuple_dataprovider", tuple_string))
-
-    NamedTuple = namedtuple('NamedTuple', 'one two')
-    @dataprovider([(NamedTuple(u'первый тест', u'второй тест'),)])
-    def test_namedtuple_dataprovider(self, data):
-        l = list(iter(data._asdict().items()))
-        key1, value1 = l[0]
-        key2, value2 = l[1]
-        dict_string = "{'%s': u'%s', '%s': u'%s'}" % (key1, value1, key2, value2)
-        test_name = "%s_(%s)" % ("test_namedtuple_dataprovider", dict_string)
-        tests_to_run.remove(test_name)
+    def test_success_discover_dataprovided_test_by_name(self):
+        stream = StringIO()
+        tests = TestLoader(config=self.config).loadTestsFromName(self.test_full_name)
+        result = LodeTestResult(stream, None, 0)
+        tests.run(result)
+        self.assertEqual(1, result.testsRun)
+        self.assertEqual([], result.errors)
+        self.assertTrue(result.wasSuccessful())
 
 
-@dataprovider([1, 2, 3])
-class ClassDataproviderTest(unittest.TestCase):
-    def test_class_dataprovider(self, data):
-        tests_to_run.remove("%s_%s" % ("test_class_dataprovider", data))
-
-
-class TestAllTestsRan(unittest.TestCase):
-    def test_all_tests_ran(self):
-        self.assertEqual([], tests_to_run)
+class DiscoverWithoutDataprovidersFirstTest(BaseDataproviderTest):
+    def test_fail_discover_dataprovided_test_by_name(self):
+        stream = StringIO()
+        tests = TestLoader(config=self.config).loadTestsFromName(self.test_full_name)
+        result = LodeTestResult(stream, None, 0)
+        tests.run(result)
+        self.assertEqual(1, result.testsRun)
+        self.assertEqual(1, len(result.errors))
+        failure = result.errors[0][0]
+        self.assertIsInstance(failure.test, Failure)
+        self.assertEqual("Failure: ValueError (No such test %s.%s)" % (self.test_case, self.test), str(failure))
+        self.assertFalse(result.wasSuccessful())
