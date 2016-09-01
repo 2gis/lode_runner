@@ -1,3 +1,11 @@
+## 0.3.0
+
+- Add optional dataproviders dataset verbosity
+
+## 0.2.8
+
+- Fix test doc when using dataprovider
+
 ## 0.2.7
 
 - Fix test_suite_name setting
