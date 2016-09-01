@@ -7,9 +7,8 @@ try:
 except ImportError:
     from io import StringIO
 
-from lode_runner import run
 from lode_runner.plugins.dataprovider import Dataprovider
-from lode_runner.core import TestLoader, LodeTestResult, LodeRunner
+from lode_runner.core import TestLoader, LodeTestResult
 
 from nose.config import Config
 from nose.plugins import PluginManager
