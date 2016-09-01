@@ -60,6 +60,7 @@ class TestIdTest(unittest.TestCase):
 
         names = self.x.loadTestsFromNames([self.tests_location])
         loaded_tests = [(parse_test_name(name)[1], parse_test_name(name)[2]) for name in names[1]]
-        self.assertEqual(
-            [('DataprovidedTestCase','test_with_dataprovider_failing_on_everything_except_2_1'),
-             ('DataprovidedTestCase','test_with_dataprovider_failing_on_everything_except_2_3')], loaded_tests)
+        self.assertEqual([
+            ('DataprovidedTestCase', 'test_with_dataprovider_failing_on_everything_except_2_with_dataset_0'),
+            ('DataprovidedTestCase', 'test_with_dataprovider_failing_on_everything_except_2_with_dataset_2')
+        ], loaded_tests)

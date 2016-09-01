@@ -47,13 +47,18 @@ class Dataprovider(Plugin):
         parser.add_option('--dataproviders-first', action="store_true",
                           default=env.get('DATAPROVIDERS_FIRST', False),
                           dest="dataproviders_first",
-                          help="If set, will call dataproviders, "
-                               "when before finding tests."
+                          help="Call dataproviders before tests collecting."
                                "[DATAPROVIDERS_FIRST]")
+        parser.add_option('--dataproviders-verbose', action="store_true",
+                          default=env.get('DATAPROVIDERS_VERBOSE', False),
+                          dest="dataproviders_verbose",
+                          help="Show dataproviders data by inserting it into test names"
+                               "[DATAPROVIDERS_VERBOSE]")
 
     def configure(self, options, conf):
         super(Dataprovider, self).configure(options, conf)
         conf.dataproviders_first = bool(options.dataproviders_first)
+        conf.dataproviders_verbose = bool(options.dataproviders_verbose)
         self.enabled = True
         if not self.enabled:
             return
@@ -92,10 +97,10 @@ class Dataprovider(Plugin):
         methods = [method for method in dir(test_case) if
                    callable(getattr(test_case, method)) and self.is_test.match(method)]
 
-        _expand_tests(methods, test_case)
+        self._expand_tests(methods, test_case)
 
     def makeTest(self, obj, parent):
-        tests = _expand_tests(obj, parent)
+        tests = self._expand_tests(obj, parent)
 
         _tests = []
         if tests:
@@ -106,6 +111,48 @@ class Dataprovider(Plugin):
 
             return _tests
 
+    def _expand_tests(self, obj, parent):
+        if inspect.isfunction(obj) and parent and not isinstance(parent, types.ModuleType):
+            # This is a Python 3.x 'unbound method'.  Wrap it with its
+            #  associated class..
+            obj = unbound_method(parent, obj)
+
+        tests = []
+        if isinstance(obj, list):
+            tests = obj
+        elif ismethod(obj):
+            tests = [obj.__name__]
+
+        _tests = []
+        for test in tests:
+            _tests += self._make_dataprovided_tests(parent, test)
+
+        return _tests
+
+    def _make_dataprovided_tests(self, parent, test):
+        testMethod = _get_test_method(parent, test)
+        if hasattr(testMethod, '_data_provided'):
+            data = testMethod._data_provided
+            del testMethod._data_provided
+            _data = _prepare_data(data, parent)
+
+            dataprovided_tests = []
+            for num, data_set in enumerate(_data):
+                if self.conf.dataproviders_verbose:
+                    safe_name = _data_set_safe_name(data_set)
+                else:
+                    safe_name = "with_dataset_%s" % num
+                name = testMethod.__name__ + "_" + safe_name
+                new_test_func = _make_func(testMethod, name, data_set)
+                setattr(parent, new_test_func.__name__, new_test_func)
+                dataprovided_tests.append(name)
+
+            delattr(parent, testMethod.__name__)
+
+            return dataprovided_tests
+        else:
+            return [test]
+
 
 def _has_parent(obj, parent):
     if parent in obj.__bases__:
@@ -115,25 +162,6 @@ def _has_parent(obj, parent):
         return _has_parent(base, parent)
 
     return False
-
-
-def _expand_tests(obj, parent):
-    if inspect.isfunction(obj) and parent and not isinstance(parent, types.ModuleType):
-        # This is a Python 3.x 'unbound method'.  Wrap it with its
-        #  associated class..
-        obj = unbound_method(parent, obj)
-
-    tests = []
-    if isinstance(obj, list):
-        tests = obj
-    elif ismethod(obj):
-        tests = [obj.__name__]
-
-    _tests = []
-    for test in tests:
-        _tests += _make_dataprovided_tests(parent, test)
-
-    return _tests
 
 
 def _to_str(value, custom=False):
@@ -150,11 +178,11 @@ def _convert(data):
     if isstring(data):
         return _to_str(data, True)
     elif isinstance(data, tuple) and hasattr(data, '_asdict'):  # Handle namedtuple
-        items = iter(data._asdict().items())
-        return dict(map(_convert, items))
+        items = iter(data._asdict().values())
+        return type(data)(*map(_convert, items))
     elif isinstance(data, collections.Mapping):
         items = iter(data.items())
-        return dict(map(_convert, items))
+        return type(data)(map(_convert, items))
     elif isinstance(data, collections.Iterable):
         return type(data)(map(_convert, data))
     else:
@@ -171,28 +199,6 @@ def _data_set_safe_name(data_set):
         replace(".", "<dot>"). \
         replace(":", "<colon>")
     return result
-
-
-def _make_dataprovided_tests(parent, test):
-    testMethod = _get_test_method(parent, test)
-    if hasattr(testMethod, '_data_provided'):
-        data = testMethod._data_provided
-        del testMethod._data_provided
-        _data = _prepare_data(data, parent)
-
-        dataprovided_tests = []
-        for data_set in _data:
-            safe_name = _data_set_safe_name(data_set)
-            name = testMethod.__name__ + "_" + safe_name
-            new_test_func = _make_func(testMethod, name, data_set)
-            setattr(parent, new_test_func.__name__, new_test_func)
-            dataprovided_tests.append(name)
-
-        delattr(parent, testMethod.__name__)
-
-        return dataprovided_tests
-    else:
-        return [test]
 
 
 def _get_test_method(parent, test):
