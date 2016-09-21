@@ -6,7 +6,7 @@ import re
 import sys
 import unittest
 
-from functools import update_wrapper
+from functools import update_wrapper, wraps
 from lode_runner.plugins import force_unicode_decorator
 from nose.pyversion import ismethod, unbound_method
 from nose.plugins import Plugin
@@ -54,11 +54,17 @@ class Dataprovider(Plugin):
                           dest="dataproviders_verbose",
                           help="Show dataproviders data by inserting it into test names"
                                "[DATAPROVIDERS_VERBOSE]")
+        parser.add_option('--log-test-arguments', action="store_true",
+                          default=env.get('LOG_TEST_ARGUMENTS', False),
+                          dest="log_test_arguments",
+                          help="Enable logging arguments passed in test"
+                               "[LOG_TEST_ARGUMENTS]")
 
     def configure(self, options, conf):
         super(Dataprovider, self).configure(options, conf)
         conf.dataproviders_first = bool(options.dataproviders_first)
         conf.dataproviders_verbose = bool(options.dataproviders_verbose)
+        conf.log_test_arguments = bool(options.log_test_arguments)
         self.enabled = True
         if not self.enabled:
             return
@@ -131,6 +137,8 @@ class Dataprovider(Plugin):
 
     def _make_dataprovided_tests(self, parent, test):
         testMethod = _get_test_method(parent, test)
+        if self.conf.log_test_arguments:
+            testMethod = _log_test_arguments(testMethod)
         if hasattr(testMethod, '_data_provided'):
             data = testMethod._data_provided
             del testMethod._data_provided
@@ -152,6 +160,16 @@ class Dataprovider(Plugin):
             return dataprovided_tests
         else:
             return [test]
+
+
+def _log_test_arguments(test):
+    @wraps(test)
+    def wrapper(*args, **kwargs):
+        names = inspect.getargspec(test).args
+        arguments = ['%s=%s' % (name, arg) for (name, arg) in zip(names, args) if name != 'self']
+        log.info('Test arguments: ' + ', '.join(arguments))
+        return test(*args, **kwargs)
+    return wrapper
 
 
 def _has_parent(obj, parent):
