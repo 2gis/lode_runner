@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 setup(
     name='lode_runner',
     url='https://github.com/2gis/lode_runner',
-    version='0.3.0',
+    version='0.3.1',
     description='Nosetests runner plugins package',
     long_description='',
     author='Igor Pavlov',

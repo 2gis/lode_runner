@@ -1,3 +1,7 @@
+## 0.3.1
+
+- Add option for logging dataproviders dataset
+
 ## 0.3.0
 
 - Add optional dataproviders dataset verbosity
