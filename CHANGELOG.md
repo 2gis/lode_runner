@@ -1,3 +1,7 @@
+## 0.4.0
+
+- Add plugin Failer that allows to stop test execution after X failures/errors.
+
 ## 0.3.1
 
 - Add option for logging dataproviders dataset
