@@ -1,18 +1,31 @@
 from unittest import suite
 
 from nose.core import TextTestResult, TextTestRunner, TestProgram
-from nose.proxy import ResultProxyFactory, ResultProxy
-from nose.loader import TestLoader
+from nose.proxy import ResultProxyFactory as NoseResultProxyFactory, ResultProxy as NoseResultProxy
+from nose.loader import TestLoader as NoseTestLoader
 from nose.suite import ContextSuiteFactory
 from nose.failure import Failure
 
 
-class ResultProxy(ResultProxy):
+class ResultProxy(NoseResultProxy):
     def assertMyTest(self, test):
         pass
 
+    def addFailure(self, test, err):
+        super(ResultProxy, self).addFailure(test, err)
+        self.check_fail_limit()
 
-class ResultProxyFactory(ResultProxyFactory):
+    def addError(self, test, err):
+        super(ResultProxy, self).addError(test, err)
+        self.check_fail_limit()
+
+    def check_fail_limit(self):
+        fail_limit = getattr(self.config, "failLimit", None)
+        if fail_limit and len(self.failures) + len(self.errors) >= fail_limit:
+            self.shouldStop = True
+
+
+class ResultProxyFactory(NoseResultProxyFactory):
     def __call__(self, result, test):
         """Return a ResultProxy for the current test.
 
@@ -31,7 +44,7 @@ class ResultProxyFactory(ResultProxyFactory):
         return ResultProxy(result, test, config=self.config)
 
 
-class TestLoader(TestLoader):
+class TestLoader(NoseTestLoader):
     def __init__(self, *args, **kwargs):
         super(TestLoader, self).__init__(*args, **kwargs)
         self.suiteClass = ContextSuiteFactory(self.config, resultProxy=ResultProxyFactory(config=self.config))
@@ -98,9 +111,10 @@ def plugins():
     from lode_runner.plugins.multiprocess import MultiProcess
     from lode_runner.plugins.testid import TestId
     from lode_runner.plugins.initializer import Initializer
+    from lode_runner.plugins.failer import Failer
 
     plugs = [
-        Dataprovider, Xunit, MultiProcess, TestId, Initializer
+        Dataprovider, Xunit, MultiProcess, TestId, Initializer, Failer
     ]
 
     from nose.plugins import builtin
@@ -115,7 +129,8 @@ def plugins():
 def main():
     LodeProgram(
         plugins=plugins(),
-        testLoader=TestLoader)
+        testLoader=TestLoader
+    )
 
 
 def run(*args, **kwargs):
