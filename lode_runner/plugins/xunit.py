@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import os
 import multiprocessing
 
 from xml.etree import ElementTree
@@ -64,6 +65,10 @@ class Xunit(Xunit):
         })
         errors = [force_unicode(error) for error in self.errorlist]
         [testsuite.append(ElementTree.fromstring(error.encode("utf-8"))) for error in errors]
+
+        stream.writeln("-" * 70)
+        stream.writeln(os.path.abspath(self.error_report_filename))
+
         ElementTree.ElementTree(testsuite).write(self.error_report_filename, encoding="utf-8", xml_declaration=True)
 
         if self.config.verbosity > 1:
