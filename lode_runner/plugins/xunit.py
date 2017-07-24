@@ -67,6 +67,7 @@ class Xunit(Xunit):
         [testsuite.append(ElementTree.fromstring(error.encode("utf-8"))) for error in errors]
 
         stream.writeln("-" * 70)
+        stream.writeln(os.path.abspath(os.path.curdir))
         stream.writeln(os.path.abspath(self.error_report_filename))
 
         ElementTree.ElementTree(testsuite).write(self.error_report_filename, encoding="utf-8", xml_declaration=True)
