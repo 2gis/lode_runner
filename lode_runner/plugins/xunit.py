@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import os
 import multiprocessing
 
 from xml.etree import ElementTree
@@ -68,7 +69,7 @@ class Xunit(Xunit):
 
         if self.config.verbosity > 1:
             stream.writeln("-" * 70)
-            stream.writeln("XML: %s" % self.error_report_filename)
+            stream.writeln("XML: {}".format(os.path.abspath(self.error_report_filename)))
 
     def beforeTest(self, test):
         """Initializes a timer before starting a test."""

@@ -1,3 +1,7 @@
+## 0.4.1
+
+- XUnit plugin now prints full path to created xUnit report
+
 ## 0.4.0
 
 - Add plugin Failer that allows to stop test execution after X failures/errors.
