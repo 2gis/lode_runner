@@ -34,6 +34,8 @@ def merge(roots):
 
     for suite in roots:
         for testcase in suite:
+            if "nose.plugins.multiprocess" in testcase.get("classname", ""):
+                continue
             candidates = base_root.findall(xpath % testcase.get('classname'))
             matching_testcase = next(t for t in candidates if t.get('name') == testcase.get('name'))
             if matching_testcase is not None:
