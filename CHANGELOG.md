@@ -1,3 +1,7 @@
+## 0.4.2
+
+- Skip 'nose.multiprocess' testcases dirung merging xml files
+
 ## 0.4.1
 
 - XUnit plugin now prints full path to created xUnit report
