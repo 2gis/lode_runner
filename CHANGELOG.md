@@ -1,3 +1,7 @@
+## 0.4.3
+
+- Add XUnit plugin 'lode_runner.plugins.ClassSkipper'. Allows skip TestClasses with no setUpClass calls
+
 ## 0.4.2
 
 - Skip 'nose.multiprocess' testcases dirung merging xml files

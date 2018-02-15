@@ -112,9 +112,10 @@ def plugins():
     from lode_runner.plugins.testid import TestId
     from lode_runner.plugins.initializer import Initializer
     from lode_runner.plugins.failer import Failer
+    from lode_runner.plugins.class_skipper import ClassSkipper
 
     plugs = [
-        Dataprovider, Xunit, MultiProcess, TestId, Initializer, Failer
+        Dataprovider, Xunit, MultiProcess, TestId, Initializer, Failer, ClassSkipper
     ]
 
     from nose.plugins import builtin
@@ -143,3 +144,7 @@ def run(*args, **kwargs):
     except KeyError:
         argv = ['run']
     return LodeProgram(argv=argv, *args, **kwargs).success
+
+
+if __name__ == "__main__":
+    main()
