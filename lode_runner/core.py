@@ -1,3 +1,6 @@
+# coding: utf-8
+
+import logging
 from unittest import suite
 
 from nose.core import TextTestResult, TextTestRunner, TestProgram
@@ -5,6 +8,9 @@ from nose.proxy import ResultProxyFactory as NoseResultProxyFactory, ResultProxy
 from nose.loader import TestLoader as NoseTestLoader
 from nose.suite import ContextSuiteFactory
 from nose.failure import Failure
+
+
+log = logging.getLogger('lode_runner.core')
 
 
 class ResultProxy(NoseResultProxy):
@@ -49,11 +55,20 @@ class TestLoader(NoseTestLoader):
         super(TestLoader, self).__init__(*args, **kwargs)
         self.suiteClass = ContextSuiteFactory(self.config, resultProxy=ResultProxyFactory(config=self.config))
 
+    def makeTest(self, obj, parent=None):
+        if getattr(self.config, "suppressTearDownExceptions", False):
+            obj_to_wrap = obj if isinstance(obj, type) else parent
+            if obj_to_wrap:
+                self._wrap_with_suppressor(obj_to_wrap)
+
+        return super(TestLoader, self).makeTest(obj, parent)
+
     def loadTestsFromTestCase(self, testCaseClass):
         """Return a suite of all tests cases contained in testCaseClass"""
         if issubclass(testCaseClass, suite.TestSuite):
             raise TypeError("Test cases should not be derived from TestSuite."
                             " Maybe you meant to derive from TestCase?")
+
         test_case_names = self.getTestCaseNames(testCaseClass)
         if not test_case_names and hasattr(testCaseClass, 'runTest'):
             test_case_names = ['runTest']
@@ -71,6 +86,18 @@ class TestLoader(NoseTestLoader):
         if plugin_tests:
             return plugin_tests
         return super(TestLoader, self).loadTestsFromModule(module, path=None, discovered=False)
+
+    def _wrap_with_suppressor(self, obj):
+        try:
+            from lode_runner.plugins.suppressor import suppress_exceptions
+        except ImportError:
+            log.exception('Error wrapping with lode_runner.plugins.suppressor ()')
+            return
+
+        names_list = ['tearDown'] + list(self.suiteClass.suiteClass.classTeardown)
+        methods_to_wrap = [getattr(obj, _name) for _name in names_list if hasattr(obj, _name)]
+        for _method in methods_to_wrap:
+            setattr(obj, _method.__name__, suppress_exceptions(_method))
 
 
 class LodeTestResult(TextTestResult):
@@ -113,9 +140,10 @@ def plugins():
     from lode_runner.plugins.initializer import Initializer
     from lode_runner.plugins.failer import Failer
     from lode_runner.plugins.class_skipper import ClassSkipper
+    from lode_runner.plugins.suppressor import Suppressor
 
     plugs = [
-        Dataprovider, Xunit, MultiProcess, TestId, Initializer, Failer, ClassSkipper
+        Dataprovider, Xunit, MultiProcess, TestId, Initializer, Failer, ClassSkipper, Suppressor
     ]
 
     from nose.plugins import builtin

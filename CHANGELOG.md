@@ -1,3 +1,9 @@
+## 0.4.4
+
+- Add 'lode_runner.plugins.Suppressor' plugin. Allows suppress any exceptions in tearDown-methods
+
+- Add optional parameter '--xunit-dump-suite-output'. If enabled drops TestSuite-level sysout/syserr to XUnit report.
+
 ## 0.4.3
 
 - Add XUnit plugin 'lode_runner.plugins.ClassSkipper'. Allows skip TestClasses with no setUpClass calls

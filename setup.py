@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 setup(
     name='lode_runner',
     url='https://github.com/2gis/lode_runner',
-    version='0.4.3',
+    version='0.4.4',
     description='Nosetests runner plugins package',
     long_description='',
     author='Igor Pavlov',
@@ -26,7 +26,8 @@ setup(
             'testid = lode_runner.plugins.testid:TestId',
             'initializer = lode_runner.plugins.initializer:Initializer',
             'failer = lode_runner.plugins.failer:Failer',
-            'class_skipper = lode_runner.plugins.class_skipper:ClassSkipper'
+            'class_skipper = lode_runner.plugins.class_skipper:ClassSkipper',
+            'suppressor = lode_runner.plugins.suppressor:Suppressor'
         ]
     },
     classifiers=[
