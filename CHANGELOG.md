@@ -1,3 +1,7 @@
+## 0.4.5
+
+- NoseId plugin also collects tests failed during setup test suite
+
 ## 0.4.4
 
 - Add 'lode_runner.plugins.Suppressor' plugin. Allows suppress any exceptions in tearDown-methods

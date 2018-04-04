@@ -1,10 +1,10 @@
 lode_runner
 ===========
-[![Build Status](https://travis-ci.org/nwlunatic/lode_runner.svg?branch=master)](https://travis-ci.org/nwlunatic/lode_runner)
+[![Build Status](https://travis-ci.org/2gis/lode_runner.svg?branch=master)](https://travis-ci.org/2gis/lode_runner)
 
-# install
+# Installation
 ```bash
-pip install -U git+https://github.com/2gis/lode_runner.git#egg=lode_runner
+pip install lode_runner
 ```
 
 # Running and debugging tests with PyCharm

@@ -1,14 +1,17 @@
 # coding: utf-8
-import multiprocessing
-import sys
+
 import os
+import sys
+import multiprocessing
+
+from nose.suite import ContextSuite
 
 try:
     from cPickle import dump, load
 except ImportError:
     from pickle import dump, load
 
-from nose.plugins.testid import TestId
+from nose.plugins.testid import TestId as NoseTestId
 from nose.plugins import Plugin
 from nose.util import split_test_name
 
@@ -23,7 +26,7 @@ TRANSLATED = MANAGER.list()
 LOCK = MANAGER.Lock()
 
 
-class TestId(TestId):
+class TestId(NoseTestId):
     collecting = True
 
     def configure(self, options, conf):
@@ -33,9 +36,11 @@ class TestId(TestId):
         if options.failed:
             self.enabled = True
             self.loopOnFailed = True
+
         self.idfile = os.path.expanduser(options.testIdFile)
         if not os.path.isabs(self.idfile):
             self.idfile = os.path.join(conf.workingDir, self.idfile)
+
         self.id = 1
         self.ids = IDS
         self.tests = TESTS
@@ -50,31 +55,31 @@ class TestId(TestId):
         self.stream = sys.stderr
 
     def _load_from_file(self, names):
-        if not len(self.ids):
+        if not self.ids:
+            failed = []
             try:
-                fh = open(self.idfile, 'rb')
-                data = load(fh)
-                failed = list()
-                if 'ids' in data:
-                    self.ids.update(data['ids'])
-                    failed += data['failed']
-                    self.source_names += data['source_names']
-                else:
-                    # old ids field
-                    self.ids.update(data)
-                    self.source_names += names
-                if len(self.ids):
-                    self.id = len(self.ids) + 1
-                    self.tests.update(dict(list(zip(list(self.ids.values()), list(self.ids.keys())))))
-                else:
-                    self.id = 1
-                fh.close()
-
-                if self.loopOnFailed and len(failed):
-                    self.collecting = False
-                    return failed
+                with open(self.idfile, 'rb') as fh:
+                    data = load(fh)
+                    if 'ids' in data:
+                        self.ids.update(data['ids'])
+                        failed += data['failed']
+                        self.source_names += data['source_names']
+                    else:
+                        # old ids field
+                        self.ids.update(data)
+                        self.source_names += names
             except IOError:
                 pass
+
+            if self.ids:
+                self.id = len(self.ids) + 1
+                self.tests.update(dict(list(zip(list(self.ids.values()), list(self.ids.keys())))))
+            else:
+                self.id = 1
+
+            if self.loopOnFailed and failed:
+                self.collecting = False
+                return failed
 
         return names
 
@@ -125,6 +130,29 @@ class TestId(TestId):
 
         return (None, translated + really_new + filtered or names)
 
+    def _handle_test(self, test):
+        """
+        Fake start and finish test
+        :param test: nose.case.Test
+        """
+        self.startTest(test)
+        test.passed = False
+        self.afterTest(test)
+
+    def _handle_suite(self, test, err):
+        if isinstance(test, ContextSuite):
+            for single_test in test._tests:
+                if isinstance(single_test, ContextSuite):
+                    self._handle_suite(single_test, err)
+                else:
+                    self._handle_test(single_test)
+
+    def handleError(self, test, err):
+        self._handle_suite(test, err)
+
+    def handleFailure(self, test, err):
+        self._handle_suite(test, err)
+
     def startTest(self, test):
         """Maybe output an id # before the test name.
 
@@ -142,32 +170,27 @@ class TestId(TestId):
                 self.write('#%s ' % self.tests[adr])
                 self._seen[adr] = 1
             return
+
         with LOCK:
-            self.tests[adr] = len(self.tests)+1
-            self.id = len(self.tests)+1
-            # self.write(str(dict(self.tests)))
+            self.id = len(self.tests) + 1
+            self.tests[adr] = self.id
             self.write('#%s ' % self.id)
-        # self.id += 1
 
     def finalize(self, result):
         """Save new ids file, if needed.
         """
         ids = dict(self.ids)
         source_names = list(self.source_names)
-        failed = list(self.failed)
+        failed = [] if result.wasSuccessful() else list(self.failed)
         tests = dict(self.tests)
 
-        if result.wasSuccessful():
-            failed = []
         if self.collecting:
             ids = dict(list(zip(list(tests.values()), list(tests.keys()))))
-        else:
-            pass
-        fh = open(self.idfile, 'wb')
-        dump({'ids': ids,
-              'failed': failed,
-              'source_names': source_names}, fh)
-        fh.close()
+
+        with open(self.idfile, 'wb') as fh:
+            dump({'ids': ids,
+                  'failed': failed,
+                  'source_names': source_names}, fh)
 
 
 def parse_test_name(test):
@@ -180,5 +203,6 @@ def parse_test_name(test):
         test_class, test_name = class_and_name, None
 
     return test_file, test_class, test_name
+
 # do not collect
 parse_test_name.__test__ = False
