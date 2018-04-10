@@ -7,6 +7,7 @@ from xml.etree import ElementTree
 
 from lode_runner.plugins import force_unicode_decorator
 
+from nose.suite import ContextSuite
 from nose.plugins.xunit import Xunit as NoseXunit, force_unicode
 from nose.plugins.base import Plugin
 
@@ -85,6 +86,24 @@ class Xunit(NoseXunit):
     def stopContext(self, context):
         self._dump_suite_output()
         super(Xunit, self).stopContext(context)
+
+    def _get_tests_list(self, test):
+        """Get separate tests list if `test` is ContextSuite"""
+        if isinstance(test, ContextSuite):
+            res = []
+            for t in test._tests:
+                res += self._get_tests_list(t)
+            return res
+
+        return [test]
+
+    def addError(self, test, err, capt=None):
+        for t in self._get_tests_list(test):
+            super(Xunit, self).addError(t, err, capt)
+
+    def addFailure(self, test, err, capt=None, tb_info=None):
+        for t in self._get_tests_list(test):
+            super(Xunit, self).addFailure(t, err, capt, tb_info)
 
     def report(self, stream):
         """Writes an Xunit-formatted XML file

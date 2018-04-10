@@ -1,20 +1,24 @@
+## 0.4.6
+
+- XUnit plugin now also drops separate block to XUnit report for all single tests (even if failed on setUpClass)
+
 ## 0.4.5
 
-- NoseId plugin also collects tests failed during setup test suite
+- NoseId plugin also collects all tests of failed on setup TestSuites
 
 ## 0.4.4
 
-- Add 'lode_runner.plugins.Suppressor' plugin. Allows suppress any exceptions in tearDown-methods
+- Add `lode_runner.plugins.Suppressor` plugin. Allows suppress any exceptions in tearDown-methods
 
-- Add optional parameter '--xunit-dump-suite-output'. If enabled drops TestSuite-level sysout/syserr to XUnit report.
+- Add optional parameter `--xunit-dump-suite-output`. If enabled drops TestSuite-level sysout/syserr to XUnit report.
 
 ## 0.4.3
 
-- Add XUnit plugin 'lode_runner.plugins.ClassSkipper'. Allows skip TestClasses with no setUpClass calls
+- Add XUnit plugin `lode_runner.plugins.ClassSkipper`. Allows skip TestClasses with no setUpClass calls
 
 ## 0.4.2
 
-- Skip 'nose.multiprocess' testcases dirung merging xml files
+- Skip `nose.multiprocess` testcases during merging xml files
 
 ## 0.4.1
 

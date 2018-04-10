@@ -36,8 +36,13 @@ def merge(roots):
         for testcase in suite:
             if "nose.plugins.multiprocess" in testcase.get("classname", ""):
                 continue
+
             candidates = base_root.findall(xpath % testcase.get('classname'))
-            matching_testcase = next(t for t in candidates if t.get('name') == testcase.get('name'))
+            try:
+                matching_testcase = next(t for t in candidates if t.get('name') == testcase.get('name'))
+            except StopIteration:
+                matching_testcase = None
+
             if matching_testcase is not None:
                 modify_suite(base_root, matching_testcase, -1)
                 base_root.remove(matching_testcase)
@@ -47,7 +52,9 @@ def merge(roots):
 
     return base_root
 
-get_roots = lambda reports: [ElementTree.parse(r).getroot() for r in reports]
+
+def get_roots(reports):
+    return [ElementTree.parse(r).getroot() for r in reports]
 
 
 def merge_reports(reports, output):
@@ -62,6 +69,7 @@ def main():
     output = args.output
 
     merge_reports(reports, output)
+
 
 if __name__ == "__main__":
     main()
